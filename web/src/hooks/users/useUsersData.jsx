@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { API, showError, showSuccess } from '../../helpers';
+import { API, showError, showSuccess, showWarning } from '../../helpers';
 import { ITEMS_PER_PAGE } from '../../constants';
 import { useTableCompactMode } from '../common/useTableCompactMode';
 
@@ -49,6 +49,7 @@ export const useUsersData = () => {
   const [searching, setSearching] = useState(false);
   const [groupOptions, setGroupOptions] = useState([]);
   const [userCount, setUserCount] = useState(0);
+  const [selectedKeys, setSelectedKeys] = useState([]);
   const [statusFilter, setStatusFilter] = useState(
     normalizeStatusFilter(localStorage.getItem('users-status-filter') || 'all'),
   );
@@ -87,6 +88,17 @@ export const useUsersData = () => {
       users[i].key = users[i].id;
     }
     setUsers(users);
+  };
+
+  const rowSelection = {
+    getCheckboxProps: (record) => ({
+      disabled: record.DeletedAt !== null,
+      name: record.username,
+    }),
+    selectedRowKeys: selectedKeys.map((user) => user.id),
+    onChange: (selectedRowKeys, selectedRows) => {
+      setSelectedKeys(selectedRows);
+    },
   };
 
   const buildFilterQuery = (
@@ -296,6 +308,73 @@ export const useUsersData = () => {
         roleFilter,
       );
     }
+    setSelectedKeys([]);
+  };
+
+  const getBatchManageUserActionLabel = (action) => {
+    switch (action) {
+      case 'enable':
+        return t('启用');
+      case 'disable':
+        return t('禁用');
+      case 'promote':
+        return t('提升');
+      case 'demote':
+        return t('降级');
+      case 'delete':
+        return t('注销');
+      default:
+        return t('处理');
+    }
+  };
+
+  const batchManageUsers = async (action) => {
+    if (selectedKeys.length === 0) {
+      showError(t('请至少选择一个用户！'));
+      return;
+    }
+    if (!['enable', 'disable', 'promote', 'demote', 'delete'].includes(action)) {
+      showError(t('不支持的批量操作'));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const ids = selectedKeys.map((user) => user.id);
+      const res = await API.post('/api/user/manage/batch', { ids, action });
+      const { success, message, data } = res.data || {};
+      if (!success) {
+        showError(message || t('批量处理用户失败'));
+        return;
+      }
+
+      const updatedCount = Number(data?.updated_count) || 0;
+      const failedCount = Number(data?.failed_count) || 0;
+      const actionLabel = getBatchManageUserActionLabel(action);
+
+      if (failedCount > 0) {
+        showWarning(
+          t('批量{{action}}完成，成功 {{updatedCount}} 个，失败 {{failedCount}} 个', {
+            action: actionLabel,
+            updatedCount,
+            failedCount,
+          }),
+        );
+      } else {
+        showSuccess(
+          t('已批量{{action}} {{count}} 个用户', {
+            action: actionLabel,
+            count: updatedCount,
+          }),
+        );
+      }
+
+      await refresh();
+    } catch (error) {
+      showError(error?.message || t('批量处理用户失败'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStatusFilterChange = async (value) => {
@@ -383,6 +462,7 @@ export const useUsersData = () => {
     userCount,
     searching,
     groupOptions,
+    selectedKeys,
     statusFilter,
     roleFilter,
 
@@ -407,6 +487,7 @@ export const useUsersData = () => {
     loadUsers,
     searchUsers,
     manageUser,
+    batchManageUsers,
     resetUserPasskey,
     resetUserTwoFA,
     handleStatusFilterChange,
@@ -414,6 +495,7 @@ export const useUsersData = () => {
     handlePageChange,
     handlePageSizeChange,
     handleRow,
+    rowSelection,
     refresh,
     resetAllFilters,
     closeAddUser,

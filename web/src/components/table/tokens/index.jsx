@@ -359,6 +359,7 @@ function TokensPage() {
     setShowEdit,
     batchCopyTokens,
     batchDeleteTokens,
+    batchUpdateTokenStatus,
 
     // Filters state
     formInitValues,
@@ -417,6 +418,7 @@ function TokensPage() {
               setShowEdit={setShowEdit}
               batchCopyTokens={batchCopyTokens}
               batchDeleteTokens={batchDeleteTokens}
+              batchUpdateTokenStatus={batchUpdateTokenStatus}
               refresh={refresh}
               t={t}
             />

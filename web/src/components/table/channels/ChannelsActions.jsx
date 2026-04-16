@@ -31,6 +31,8 @@ import CompactModeToggle from '../../common/ui/CompactModeToggle';
 const ChannelsActions = ({
   enableBatchDelete,
   batchDeleteChannels,
+  batchUpdateChannelStatus,
+  batchTestSelectedChannels,
   setShowBatchSetTag,
   testAllChannels,
   fixChannelsAbilities,
@@ -64,6 +66,54 @@ const ChannelsActions = ({
       <div className='flex flex-col md:flex-row justify-between gap-2'>
         {/* 左侧：批量操作按钮 */}
         <div className='flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto order-2 md:order-1'>
+          <Button
+            size='small'
+            disabled={!enableBatchDelete}
+            type='secondary'
+            className='w-full md:w-auto'
+            onClick={() => {
+              Modal.confirm({
+                title: t('确定是否要启用所选通道？'),
+                content: t('将把所选渠道设为启用状态'),
+                onOk: () => batchUpdateChannelStatus(1),
+              });
+            }}
+          >
+            {t('启用所选通道')}
+          </Button>
+
+          <Button
+            size='small'
+            disabled={!enableBatchDelete}
+            type='warning'
+            className='w-full md:w-auto'
+            onClick={() => {
+              Modal.confirm({
+                title: t('确定是否要禁用所选通道？'),
+                content: t('将把所选渠道设为手动禁用状态'),
+                onOk: () => batchUpdateChannelStatus(2),
+              });
+            }}
+          >
+            {t('禁用所选通道')}
+          </Button>
+
+          <Button
+            size='small'
+            disabled={!enableBatchDelete}
+            type='primary'
+            className='w-full md:w-auto'
+            onClick={() => {
+              Modal.confirm({
+                title: t('确定是否要测试所选通道？'),
+                content: t('将依次测试所选渠道的默认测试模型或第一个模型'),
+                onOk: () => batchTestSelectedChannels(),
+              });
+            }}
+          >
+            {t('测试所选通道')}
+          </Button>
+
           <Button
             size='small'
             disabled={!enableBatchDelete}

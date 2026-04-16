@@ -244,36 +244,9 @@ func RecordTaskBillingLog(params RecordTaskBillingLogParams) {
 }
 
 func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, startIdx int, num int, channel int, group string, requestId string) (logs []*Log, total int64, err error) {
-	var tx *gorm.DB
-	if logType == LogTypeUnknown {
-		tx = LOG_DB
-	} else {
-		tx = LOG_DB.Where("logs.type = ?", logType)
-	}
-
-	if modelName != "" {
-		tx = tx.Where("logs.model_name like ?", modelName)
-	}
-	if username != "" {
-		tx = tx.Where("logs.username = ?", username)
-	}
-	if tokenName != "" {
-		tx = tx.Where("logs.token_name = ?", tokenName)
-	}
-	if requestId != "" {
-		tx = tx.Where("logs.request_id = ?", requestId)
-	}
-	if startTimestamp != 0 {
-		tx = tx.Where("logs.created_at >= ?", startTimestamp)
-	}
-	if endTimestamp != 0 {
-		tx = tx.Where("logs.created_at <= ?", endTimestamp)
-	}
-	if channel != 0 {
-		tx = tx.Where("logs.channel_id = ?", channel)
-	}
-	if group != "" {
-		tx = tx.Where("logs."+logGroupCol+" = ?", group)
+	tx, err := buildAdminLogQuery(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group, requestId)
+	if err != nil {
+		return nil, 0, err
 	}
 	err = tx.Model(&Log{}).Count(&total).Error
 	if err != nil {
@@ -330,17 +303,181 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 const logSearchCountLimit = 10000
 
 func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, startIdx int, num int, group string, requestId string) (logs []*Log, total int64, err error) {
+	tx, err := buildUserLogQuery(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, group, requestId)
+	if err != nil {
+		return nil, 0, err
+	}
+	err = tx.Model(&Log{}).Limit(logSearchCountLimit).Count(&total).Error
+	if err != nil {
+		common.SysError("failed to count user logs: " + err.Error())
+		return nil, 0, errors.New("查询日志失败")
+	}
+	err = tx.Order("logs.id desc").Limit(num).Offset(startIdx).Find(&logs).Error
+	if err != nil {
+		common.SysError("failed to search user logs: " + err.Error())
+		return nil, 0, errors.New("查询日志失败")
+	}
+
+	formatUserLogs(logs, startIdx)
+	return logs, total, err
+}
+
+func GetLogInsights(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string, requestId string, limit int) (LogInsights, error) {
+	insights := LogInsights{}
+	tx, err := buildAdminLogQuery(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group, requestId)
+	if err != nil {
+		return insights, err
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	insights.Models, err = queryLogInsightItems(
+		tx,
+		"logs.model_name as key, logs.model_name as label, count(*) as count",
+		"logs.model_name",
+		limit,
+		func(db *gorm.DB) *gorm.DB {
+			return db.Where("logs.model_name != ''")
+		},
+	)
+	if err != nil {
+		return insights, err
+	}
+
+	insights.Channels, err = queryLogInsightItems(
+		tx.Joins("left join channels on channels.id = logs.channel_id"),
+		"COALESCE(channels.name, '') as key, COALESCE(channels.name, '') as label, count(*) as count",
+		"logs.channel_id, channels.name",
+		limit,
+		func(db *gorm.DB) *gorm.DB {
+			return db.Where("logs.channel_id != 0")
+		},
+	)
+	if err != nil {
+		return insights, err
+	}
+
+	insights.Contents, err = queryLogInsightItems(
+		tx,
+		"logs.content as key, logs.content as label, count(*) as count",
+		"logs.content",
+		limit,
+		func(db *gorm.DB) *gorm.DB {
+			return db.Where("logs.content != ''")
+		},
+	)
+	if err != nil {
+		return insights, err
+	}
+
+	return insights, nil
+}
+
+func GetUserLogInsights(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, group string, requestId string, limit int) (LogInsights, error) {
+	insights := LogInsights{}
+	tx, err := buildUserLogQuery(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, group, requestId)
+	if err != nil {
+		return insights, err
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	insights.Models, err = queryLogInsightItems(
+		tx,
+		"logs.model_name as key, logs.model_name as label, count(*) as count",
+		"logs.model_name",
+		limit,
+		func(db *gorm.DB) *gorm.DB {
+			return db.Where("logs.model_name != ''")
+		},
+	)
+	if err != nil {
+		return insights, err
+	}
+
+	insights.Contents, err = queryLogInsightItems(
+		tx,
+		"logs.content as key, logs.content as label, count(*) as count",
+		"logs.content",
+		limit,
+		func(db *gorm.DB) *gorm.DB {
+			return db.Where("logs.content != ''")
+		},
+	)
+	if err != nil {
+		return insights, err
+	}
+
+	return insights, nil
+}
+
+type Stat struct {
+	Quota int `json:"quota"`
+	Rpm   int `json:"rpm"`
+	Tpm   int `json:"tpm"`
+}
+
+type LogInsightItem struct {
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+}
+
+type LogInsights struct {
+	Models   []LogInsightItem `json:"models"`
+	Channels []LogInsightItem `json:"channels,omitempty"`
+	Contents []LogInsightItem `json:"contents"`
+}
+
+func buildAdminLogQuery(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string, requestId string) (*gorm.DB, error) {
 	var tx *gorm.DB
 	if logType == LogTypeUnknown {
-		tx = LOG_DB.Where("logs.user_id = ?", userId)
+		tx = LOG_DB.Model(&Log{})
 	} else {
-		tx = LOG_DB.Where("logs.user_id = ? and logs.type = ?", userId, logType)
+		tx = LOG_DB.Model(&Log{}).Where("logs.type = ?", logType)
+	}
+
+	if modelName != "" {
+		tx = tx.Where("logs.model_name like ?", modelName)
+	}
+	if username != "" {
+		tx = tx.Where("logs.username = ?", username)
+	}
+	if tokenName != "" {
+		tx = tx.Where("logs.token_name = ?", tokenName)
+	}
+	if requestId != "" {
+		tx = tx.Where("logs.request_id = ?", requestId)
+	}
+	if startTimestamp != 0 {
+		tx = tx.Where("logs.created_at >= ?", startTimestamp)
+	}
+	if endTimestamp != 0 {
+		tx = tx.Where("logs.created_at <= ?", endTimestamp)
+	}
+	if channel != 0 {
+		tx = tx.Where("logs.channel_id = ?", channel)
+	}
+	if group != "" {
+		tx = tx.Where("logs."+logGroupCol+" = ?", group)
+	}
+	return tx, nil
+}
+
+func buildUserLogQuery(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, group string, requestId string) (*gorm.DB, error) {
+	var tx *gorm.DB
+	if logType == LogTypeUnknown {
+		tx = LOG_DB.Model(&Log{}).Where("logs.user_id = ?", userId)
+	} else {
+		tx = LOG_DB.Model(&Log{}).Where("logs.user_id = ? and logs.type = ?", userId, logType)
 	}
 
 	if modelName != "" {
 		modelNamePattern, err := sanitizeLikePattern(modelName)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		tx = tx.Where("logs.model_name LIKE ? ESCAPE '!'", modelNamePattern)
 	}
@@ -359,25 +496,17 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 	if group != "" {
 		tx = tx.Where("logs."+logGroupCol+" = ?", group)
 	}
-	err = tx.Model(&Log{}).Limit(logSearchCountLimit).Count(&total).Error
-	if err != nil {
-		common.SysError("failed to count user logs: " + err.Error())
-		return nil, 0, errors.New("查询日志失败")
-	}
-	err = tx.Order("logs.id desc").Limit(num).Offset(startIdx).Find(&logs).Error
-	if err != nil {
-		common.SysError("failed to search user logs: " + err.Error())
-		return nil, 0, errors.New("查询日志失败")
-	}
-
-	formatUserLogs(logs, startIdx)
-	return logs, total, err
+	return tx, nil
 }
 
-type Stat struct {
-	Quota int `json:"quota"`
-	Rpm   int `json:"rpm"`
-	Tpm   int `json:"tpm"`
+func queryLogInsightItems(tx *gorm.DB, selectExpr string, groupBy string, limit int, extraClauses ...func(*gorm.DB) *gorm.DB) ([]LogInsightItem, error) {
+	query := tx.Session(&gorm.Session{})
+	for _, apply := range extraClauses {
+		query = apply(query)
+	}
+	var items []LogInsightItem
+	err := query.Select(selectExpr).Group(groupBy).Order("count desc").Limit(limit).Scan(&items).Error
+	return items, err
 }
 
 func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string) (stat Stat, err error) {

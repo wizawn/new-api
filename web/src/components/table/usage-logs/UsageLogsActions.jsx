@@ -30,6 +30,8 @@ const LogsActions = ({
   compactMode,
   setCompactMode,
   handleEyeClick,
+  openInsightsModal,
+  exportLogs,
   t,
 }) => {
   const showSkeleton = useMinimumLoadingTime(loadingStat);
@@ -92,6 +94,20 @@ const LogsActions = ({
           onClick={handleEyeClick}
         >
           {t('刷新统计')}
+        </Button>
+        <Button
+          size='small'
+          type='secondary'
+          onClick={openInsightsModal}
+        >
+          {t('失败热点')}
+        </Button>
+        <Button
+          size='small'
+          type='secondary'
+          onClick={exportLogs}
+        >
+          {t('导出 CSV')}
         </Button>
         <CompactModeToggle
           compactMode={compactMode}

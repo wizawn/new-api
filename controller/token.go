@@ -295,15 +295,17 @@ func UpdateToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	if token.Status == common.TokenStatusEnabled {
-		if cleanToken.Status == common.TokenStatusExpired && cleanToken.ExpiredTime <= common.GetTimestamp() && cleanToken.ExpiredTime != -1 {
+	if err := validateTokenStatusTransition(cleanToken, token.Status); err != nil {
+		if token.Status == common.TokenStatusEnabled && cleanToken.Status == common.TokenStatusExpired {
 			common.ApiErrorI18n(c, i18n.MsgTokenExpiredCannotEnable)
 			return
 		}
-		if cleanToken.Status == common.TokenStatusExhausted && cleanToken.RemainQuota <= 0 && !cleanToken.UnlimitedQuota {
+		if token.Status == common.TokenStatusEnabled && cleanToken.Status == common.TokenStatusExhausted {
 			common.ApiErrorI18n(c, i18n.MsgTokenExhaustedCannotEable)
 			return
 		}
+		common.ApiError(c, err)
+		return
 	}
 	if statusOnly != "" {
 		cleanToken.Status = token.Status
@@ -333,6 +335,97 @@ func UpdateToken(c *gin.Context) {
 
 type TokenBatch struct {
 	Ids []int `json:"ids"`
+}
+
+type TokenBatchStatusRequest struct {
+	Ids    []int `json:"ids"`
+	Status int   `json:"status"`
+}
+
+type TokenBatchStatusResult struct {
+	UpdatedCount  int               `json:"updated_count"`
+	FailedCount   int               `json:"failed_count"`
+	FailedIDs     []int             `json:"failed_ids"`
+	FailedReasons map[int]string    `json:"failed_reasons,omitempty"`
+	Status        int               `json:"status"`
+}
+
+func validateTokenStatusTransition(token *model.Token, targetStatus int) error {
+	if token == nil {
+		return fmt.Errorf("token is nil")
+	}
+	if targetStatus != common.TokenStatusEnabled {
+		return nil
+	}
+	if token.Status == common.TokenStatusExpired && token.ExpiredTime <= common.GetTimestamp() && token.ExpiredTime != -1 {
+		return fmt.Errorf("expired token cannot be enabled")
+	}
+	if token.Status == common.TokenStatusExhausted && token.RemainQuota <= 0 && !token.UnlimitedQuota {
+		return fmt.Errorf("exhausted token cannot be enabled")
+	}
+	return nil
+}
+
+func buildTokenBatchStatusFailureReason(token *model.Token, targetStatus int, err error) string {
+	if err == nil {
+		return ""
+	}
+	if token != nil && targetStatus == common.TokenStatusEnabled {
+		if token.Status == common.TokenStatusExpired {
+			return "已过期令牌不能启用"
+		}
+		if token.Status == common.TokenStatusExhausted {
+			return "已耗尽令牌不能启用"
+		}
+	}
+	return err.Error()
+}
+
+func BatchUpdateTokenStatus(c *gin.Context) {
+	request := TokenBatchStatusRequest{}
+	if err := c.ShouldBindJSON(&request); err != nil || len(request.Ids) == 0 {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	if len(request.Ids) > 100 {
+		common.ApiErrorI18n(c, i18n.MsgBatchTooMany, map[string]any{"Max": 100})
+		return
+	}
+	if request.Status != common.TokenStatusEnabled && request.Status != common.TokenStatusDisabled {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+
+	userId := c.GetInt("id")
+	result := TokenBatchStatusResult{
+		FailedIDs:     make([]int, 0),
+		FailedReasons: make(map[int]string),
+		Status:        request.Status,
+	}
+
+	for _, id := range request.Ids {
+		cleanToken, err := model.GetTokenByIds(id, userId)
+		if err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReasons[id] = err.Error()
+			continue
+		}
+		if err := validateTokenStatusTransition(cleanToken, request.Status); err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReasons[id] = buildTokenBatchStatusFailureReason(cleanToken, request.Status, err)
+			continue
+		}
+		cleanToken.Status = request.Status
+		if err := cleanToken.Update(); err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReasons[id] = err.Error()
+			continue
+		}
+		result.UpdatedCount++
+	}
+
+	result.FailedCount = len(result.FailedIDs)
+	common.ApiSuccess(c, result)
 }
 
 func DeleteTokenBatch(c *gin.Context) {

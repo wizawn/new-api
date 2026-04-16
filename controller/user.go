@@ -869,6 +869,107 @@ type ManageRequest struct {
 	Mode   string `json:"mode"`
 }
 
+type BatchManageUsersRequest struct {
+	Ids    []int  `json:"ids"`
+	Action string `json:"action"`
+}
+
+type BatchManageUsersResult struct {
+	Action        string         `json:"action"`
+	UpdatedCount  int            `json:"updated_count"`
+	FailedCount   int            `json:"failed_count"`
+	FailedIDs     []int          `json:"failed_ids"`
+	FailedReasons map[int]string `json:"failed_reasons,omitempty"`
+}
+
+func validateBatchManageUserAction(action string) bool {
+	switch action {
+	case "disable", "enable", "delete", "promote", "demote":
+		return true
+	default:
+		return false
+	}
+}
+
+func buildBatchManageUserFailureReason(action string, user *model.User, myRole int) string {
+	if user == nil {
+		return "用户不存在"
+	}
+	if myRole <= user.Role && myRole != common.RoleRootUser {
+		return "无权操作同级或更高等级用户"
+	}
+	switch action {
+	case "disable":
+		if user.Role == common.RoleRootUser {
+			return "不能禁用超级管理员"
+		}
+	case "delete":
+		if user.Role == common.RoleRootUser {
+			return "不能删除超级管理员"
+		}
+	case "promote":
+		if myRole != common.RoleRootUser {
+			return "只有超级管理员可以提升管理员"
+		}
+		if user.Role >= common.RoleAdminUser {
+			return "该用户已经是管理员"
+		}
+	case "demote":
+		if user.Role == common.RoleRootUser {
+			return "不能降级超级管理员"
+		}
+		if user.Role == common.RoleCommonUser {
+			return "该用户已经是普通用户"
+		}
+	}
+	return "操作失败"
+}
+
+func applyBatchManageUserAction(user *model.User, action string, myRole int) error {
+	if user == nil || user.Id == 0 {
+		return fmt.Errorf("user not found")
+	}
+	if myRole <= user.Role && myRole != common.RoleRootUser {
+		return fmt.Errorf("insufficient permission")
+	}
+	switch action {
+	case "disable":
+		if user.Role == common.RoleRootUser {
+			return fmt.Errorf("cannot disable root user")
+		}
+		user.Status = common.UserStatusDisabled
+		return user.Update(false)
+	case "enable":
+		user.Status = common.UserStatusEnabled
+		return user.Update(false)
+	case "delete":
+		if user.Role == common.RoleRootUser {
+			return fmt.Errorf("cannot delete root user")
+		}
+		return user.Delete()
+	case "promote":
+		if myRole != common.RoleRootUser {
+			return fmt.Errorf("only root can promote")
+		}
+		if user.Role >= common.RoleAdminUser {
+			return fmt.Errorf("user already admin")
+		}
+		user.Role = common.RoleAdminUser
+		return user.Update(false)
+	case "demote":
+		if user.Role == common.RoleRootUser {
+			return fmt.Errorf("cannot demote root user")
+		}
+		if user.Role == common.RoleCommonUser {
+			return fmt.Errorf("user already common")
+		}
+		user.Role = common.RoleCommonUser
+		return user.Update(false)
+	default:
+		return fmt.Errorf("unsupported action")
+	}
+}
+
 // ManageUser Only admin user can do this
 func ManageUser(c *gin.Context) {
 	var req ManageRequest
@@ -991,6 +1092,47 @@ func ManageUser(c *gin.Context) {
 		"data":    clearUser,
 	})
 	return
+}
+
+func BatchManageUsers(c *gin.Context) {
+	var req BatchManageUsersRequest
+	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil || len(req.Ids) == 0 {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	if len(req.Ids) > 100 {
+		common.ApiErrorI18n(c, i18n.MsgBatchTooMany, map[string]any{"Max": 100})
+		return
+	}
+	if !validateBatchManageUserAction(req.Action) {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+
+	myRole := c.GetInt("role")
+	result := BatchManageUsersResult{
+		Action:        req.Action,
+		FailedIDs:     make([]int, 0),
+		FailedReasons: make(map[int]string),
+	}
+
+	for _, id := range req.Ids {
+		user := model.User{Id: id}
+		if err := model.DB.Unscoped().Where(&user).First(&user).Error; err != nil || user.Id == 0 {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReasons[id] = "用户不存在"
+			continue
+		}
+		if err := applyBatchManageUserAction(&user, req.Action, myRole); err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReasons[id] = buildBatchManageUserFailureReason(req.Action, &user, myRole)
+			continue
+		}
+		result.UpdatedCount++
+	}
+
+	result.FailedCount = len(result.FailedIDs)
+	common.ApiSuccess(c, result)
 }
 
 type emailBindRequest struct {

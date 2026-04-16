@@ -24,6 +24,7 @@ import {
   showError,
   showInfo,
   showSuccess,
+  showWarning,
   loadChannelModels,
   copy,
   toBoolean,
@@ -668,8 +669,30 @@ export const useChannelsData = () => {
   };
 
   // Batch operations
+  const getSelectedChannelTargets = () => {
+    const queue = Array.isArray(selectedChannels) ? [...selectedChannels] : [];
+    const targets = [];
+    const seen = new Set();
+
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (!item) continue;
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        queue.push(...item.children);
+        continue;
+      }
+      const id = Number(item.id);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      targets.push(item);
+    }
+
+    return targets;
+  };
+
   const batchSetChannelTag = async () => {
-    if (selectedChannels.length === 0) {
+    const targets = getSelectedChannelTargets();
+    if (targets.length === 0) {
       showError(t('请先选择要设置标签的渠道！'));
       return;
     }
@@ -677,7 +700,7 @@ export const useChannelsData = () => {
       showError(t('标签不能为空！'));
       return;
     }
-    let ids = selectedChannels.map((channel) => channel.id);
+    const ids = targets.map((channel) => channel.id);
     const res = await API.post('/api/channel/batch/tag', {
       ids: ids,
       tag: batchSetTagValue === '' ? null : batchSetTagValue,
@@ -694,15 +717,13 @@ export const useChannelsData = () => {
   };
 
   const batchDeleteChannels = async () => {
-    if (selectedChannels.length === 0) {
+    const targets = getSelectedChannelTargets();
+    if (targets.length === 0) {
       showError(t('请先选择要删除的通道！'));
       return;
     }
     setLoading(true);
-    let ids = [];
-    selectedChannels.forEach((channel) => {
-      ids.push(channel.id);
-    });
+    const ids = targets.map((channel) => channel.id);
     const res = await API.post(`/api/channel/batch`, { ids: ids });
     const { success, message, data } = res.data;
     if (success) {
@@ -717,6 +738,129 @@ export const useChannelsData = () => {
       showError(message);
     }
     setLoading(false);
+  };
+
+  const batchUpdateChannelStatus = async (status) => {
+    const targets = getSelectedChannelTargets();
+    if (targets.length === 0) {
+      showError(t('请先选择要操作的通道！'));
+      return;
+    }
+    if (![1, 2].includes(Number(status))) {
+      showError(t('不支持的渠道状态'));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const ids = targets.map((channel) => channel.id);
+      const res = await API.post('/api/channel/batch/status', { ids, status });
+      const { success, message, data } = res.data || {};
+      if (!success) {
+        showError(message || t('批量更新渠道状态失败'));
+        return;
+      }
+      const updatedCount = Number(data?.updated_count) || 0;
+      const failedCount = Number(data?.failed_count) || 0;
+      if (failedCount > 0) {
+        showWarning(
+          t('批量渠道状态更新完成，成功 {{updatedCount}} 个，失败 {{failedCount}} 个', {
+            updatedCount,
+            failedCount,
+          }),
+        );
+      } else {
+        showSuccess(
+          t('已批量更新 {{count}} 个渠道状态', { count: updatedCount }),
+        );
+      }
+      await refresh();
+    } catch (error) {
+      showError(error?.message || t('批量更新渠道状态失败'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const batchTestSelectedChannels = async () => {
+    const targets = getSelectedChannelTargets();
+    if (targets.length === 0) {
+      showError(t('请先选择要测试的通道！'));
+      return;
+    }
+
+    const resolveTestModel = (channel) => {
+      const explicitTestModel = String(channel?.test_model || '').trim();
+      if (explicitTestModel) return explicitTestModel;
+      const firstModel = String(channel?.models || '')
+        .split(',')
+        .map((item) => item.trim())
+        .find(Boolean);
+      return firstModel || 'gpt-4o-mini';
+    };
+
+    setLoading(true);
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const channel of targets) {
+        const model = resolveTestModel(channel);
+        const testKey = `${channel.id}-${model}`;
+        try {
+          const res = await API.get(
+            `/api/channel/test/${channel.id}?model=${encodeURIComponent(model)}`,
+          );
+          const { success, message, time, error_code } = res.data || {};
+          setModelTestResults((prev) => ({
+            ...prev,
+            [testKey]: {
+              success: !!success,
+              message: message || '',
+              time: time || 0,
+              timestamp: Date.now(),
+              errorCode: error_code || null,
+            },
+          }));
+          if (success) {
+            successCount += 1;
+            updateChannelProperty(channel.id, (currentChannel) => {
+              currentChannel.response_time = (time || 0) * 1000;
+              currentChannel.test_time = Date.now() / 1000;
+            });
+          } else {
+            failedCount += 1;
+          }
+        } catch (error) {
+          failedCount += 1;
+          setModelTestResults((prev) => ({
+            ...prev,
+            [testKey]: {
+              success: false,
+              message: error?.message || t('网络错误'),
+              time: 0,
+              timestamp: Date.now(),
+              errorCode: null,
+            },
+          }));
+        }
+      }
+      if (failedCount > 0) {
+        showWarning(
+          t('批量测试完成，成功 {{successCount}} 个，失败 {{failedCount}} 个', {
+            successCount,
+            failedCount,
+          }),
+        );
+      } else {
+        showSuccess(
+          t('已完成 {{count}} 个渠道的批量测试', { count: successCount }),
+        );
+      }
+      await refresh();
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Channel operations
@@ -1229,6 +1373,8 @@ export const useChannelsData = () => {
     handleRow,
     batchSetChannelTag,
     batchDeleteChannels,
+    batchUpdateChannelStatus,
+    batchTestSelectedChannels,
     testAllChannels,
     deleteAllDisabledChannels,
     updateAllChannelsBalance,

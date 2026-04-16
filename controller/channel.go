@@ -812,8 +812,17 @@ func EditTagChannels(c *gin.Context) {
 }
 
 type ChannelBatch struct {
-	Ids []int   `json:"ids"`
-	Tag *string `json:"tag"`
+	Ids    []int   `json:"ids"`
+	Tag    *string `json:"tag"`
+	Status *int    `json:"status"`
+}
+
+type ChannelBatchStatusResult struct {
+	UpdatedCount int            `json:"updated_count"`
+	FailedCount  int            `json:"failed_count"`
+	FailedIDs    []int          `json:"failed_ids"`
+	Status       int            `json:"status"`
+	FailedReason map[int]string `json:"failed_reasons,omitempty"`
 }
 
 func DeleteChannelBatch(c *gin.Context) {
@@ -838,6 +847,57 @@ func DeleteChannelBatch(c *gin.Context) {
 		"data":    len(channelBatch.Ids),
 	})
 	return
+}
+
+func BatchUpdateChannelStatus(c *gin.Context) {
+	channelBatch := ChannelBatch{}
+	err := c.ShouldBindJSON(&channelBatch)
+	if err != nil || len(channelBatch.Ids) == 0 || channelBatch.Status == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "参数错误",
+		})
+		return
+	}
+	if *channelBatch.Status != common.ChannelStatusEnabled &&
+		*channelBatch.Status != common.ChannelStatusManuallyDisabled {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "仅支持批量启用或手动禁用",
+		})
+		return
+	}
+
+	result := ChannelBatchStatusResult{
+		Status:       *channelBatch.Status,
+		FailedIDs:    make([]int, 0),
+		FailedReason: make(map[int]string),
+	}
+
+	for _, id := range channelBatch.Ids {
+		channel, err := model.GetChannelById(id, true)
+		if err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReason[id] = err.Error()
+			continue
+		}
+		channel.Status = *channelBatch.Status
+		if err := channel.Update(); err != nil {
+			result.FailedIDs = append(result.FailedIDs, id)
+			result.FailedReason[id] = err.Error()
+			continue
+		}
+		result.UpdatedCount++
+	}
+
+	result.FailedCount = len(result.FailedIDs)
+	model.InitChannelCache()
+	service.ResetProxyClientCache()
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    result,
+	})
 }
 
 type PatchChannel struct {

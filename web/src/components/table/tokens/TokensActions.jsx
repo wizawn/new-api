@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useState } from 'react';
-import { Button, Space } from '@douyinfe/semi-ui';
+import { Button, Modal } from '@douyinfe/semi-ui';
 import { showError } from '../../../helpers';
 import CopyTokensModal from './modals/CopyTokensModal';
 import DeleteTokensModal from './modals/DeleteTokensModal';
@@ -29,6 +29,7 @@ const TokensActions = ({
   setShowEdit,
   batchCopyTokens,
   batchDeleteTokens,
+  batchUpdateTokenStatus,
   refresh,
   t,
 }) => {
@@ -52,6 +53,21 @@ const TokensActions = ({
       return;
     }
     setShowDeleteModal(true);
+  };
+
+  const handleBatchStatusUpdate = (status) => {
+    if (selectedKeys.length === 0) {
+      showError(t('请至少选择一个令牌！'));
+      return;
+    }
+    const isEnable = Number(status) === 1;
+    Modal.confirm({
+      title: isEnable ? t('批量启用令牌') : t('批量禁用令牌'),
+      content: isEnable
+        ? t('确定要启用所选令牌吗？')
+        : t('确定要禁用所选令牌吗？'),
+      onOk: () => batchUpdateTokenStatus(status),
+    });
   };
 
   // Handle delete confirmation
@@ -93,6 +109,24 @@ const TokensActions = ({
           size='small'
         >
           {t('刷新')}
+        </Button>
+
+        <Button
+          type='secondary'
+          className='flex-1 md:flex-initial'
+          onClick={() => handleBatchStatusUpdate(1)}
+          size='small'
+        >
+          {t('启用所选令牌')}
+        </Button>
+
+        <Button
+          type='warning'
+          className='flex-1 md:flex-initial'
+          onClick={() => handleBatchStatusUpdate(2)}
+          size='small'
+        >
+          {t('禁用所选令牌')}
         </Button>
 
         <Button

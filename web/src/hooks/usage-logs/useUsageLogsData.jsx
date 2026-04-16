@@ -185,6 +185,13 @@ export const useLogsData = () => {
     useState(null);
   const [showParamOverrideModal, setShowParamOverrideModal] = useState(false);
   const [paramOverrideTarget, setParamOverrideTarget] = useState(null);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [insightsData, setInsightsData] = useState({
+    models: [],
+    channels: [],
+    contents: [],
+  });
 
   // Initialize default column visibility
   const initDefaultColumns = () => {
@@ -791,6 +798,99 @@ export const useLogsData = () => {
     await loadLogs(1, pageSize);
   };
 
+  const exportLogs = () => {
+    const {
+      username,
+      token_name,
+      model_name,
+      start_timestamp,
+      end_timestamp,
+      channel,
+      group,
+      request_id,
+      logType: formLogType,
+    } = getFormValues();
+
+    const currentLogType =
+      formLogType !== undefined ? formLogType : logType;
+    const localStartTimestamp = Date.parse(start_timestamp) / 1000;
+    const localEndTimestamp = Date.parse(end_timestamp) / 1000;
+    const params = new URLSearchParams();
+    params.set('type', String(currentLogType || 0));
+    params.set('token_name', token_name || '');
+    params.set('model_name', model_name || '');
+    params.set('start_timestamp', String(localStartTimestamp || 0));
+    params.set('end_timestamp', String(localEndTimestamp || 0));
+    params.set('group', group || '');
+    params.set('request_id', request_id || '');
+
+    let exportPath = '/api/log/self/export';
+    if (isAdminUser) {
+      exportPath = '/api/log/export';
+      params.set('username', username || '');
+      params.set('channel', channel || '');
+    }
+
+    const link = document.createElement('a');
+    link.href = `${exportPath}?${params.toString()}`;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const openInsightsModal = async () => {
+    const {
+      username,
+      token_name,
+      model_name,
+      start_timestamp,
+      end_timestamp,
+      channel,
+      group,
+      request_id,
+      logType: formLogType,
+    } = getFormValues();
+    const currentLogType =
+      formLogType !== undefined ? formLogType : logType;
+    const localStartTimestamp = Date.parse(start_timestamp) / 1000;
+    const localEndTimestamp = Date.parse(end_timestamp) / 1000;
+    const params = new URLSearchParams();
+    params.set('type', String(currentLogType || 0));
+    params.set('token_name', token_name || '');
+    params.set('model_name', model_name || '');
+    params.set('start_timestamp', String(localStartTimestamp || 0));
+    params.set('end_timestamp', String(localEndTimestamp || 0));
+    params.set('group', group || '');
+    params.set('request_id', request_id || '');
+    params.set('limit', '8');
+    let url = '/api/log/self/insights';
+    if (isAdminUser) {
+      url = '/api/log/insights';
+      params.set('username', username || '');
+      params.set('channel', channel || '');
+    }
+    setLoadingInsights(true);
+    try {
+      const res = await API.get(`${url}?${params.toString()}`);
+      const { success, message, data } = res.data || {};
+      if (!success) {
+        showError(message || t('加载日志热点失败'));
+        return;
+      }
+      setInsightsData({
+        models: Array.isArray(data?.models) ? data.models : [],
+        channels: Array.isArray(data?.channels) ? data.channels : [],
+        contents: Array.isArray(data?.contents) ? data.contents : [],
+      });
+      setShowInsightsModal(true);
+    } catch (error) {
+      showError(error?.message || t('加载日志热点失败'));
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
   // Copy text function
   const copyText = async (e, text) => {
     e.stopPropagation();
@@ -876,12 +976,18 @@ export const useLogsData = () => {
     showParamOverrideModal,
     setShowParamOverrideModal,
     paramOverrideTarget,
+    showInsightsModal,
+    setShowInsightsModal,
+    loadingInsights,
+    insightsData,
 
     // Functions
     loadLogs,
     handlePageChange,
     handlePageSizeChange,
     refresh,
+    openInsightsModal,
+    exportLogs,
     copyText,
     handleEyeClick,
     setLogsFormat,

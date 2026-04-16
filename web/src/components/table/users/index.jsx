@@ -97,7 +97,9 @@ const UsersPage = () => {
         actionsArea={
           <div className='flex flex-col md:flex-row justify-between items-center gap-2 w-full'>
             <UsersActions
+              selectedKeys={usersData.selectedKeys}
               setShowAddUser={setShowAddUser}
+              batchManageUsers={usersData.batchManageUsers}
               refresh={refresh}
               t={t}
             />

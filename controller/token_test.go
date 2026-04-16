@@ -38,6 +38,14 @@ type tokenKeyResponse struct {
 	Key string `json:"key"`
 }
 
+type tokenBatchStatusResponse struct {
+	UpdatedCount int            `json:"updated_count"`
+	FailedCount  int            `json:"failed_count"`
+	FailedIDs    []int          `json:"failed_ids"`
+	FailedReason map[int]string `json:"failed_reasons"`
+	Status       int            `json:"status"`
+}
+
 func setupTokenControllerTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -333,5 +341,64 @@ func TestGetTokenKeyRequiresOwnershipAndReturnsFullKey(t *testing.T) {
 	}
 	if strings.Contains(unauthorizedRecorder.Body.String(), token.Key) {
 		t.Fatalf("unauthorized key response leaked raw token key: %s", unauthorizedRecorder.Body.String())
+	}
+}
+
+func TestBatchUpdateTokenStatusSupportsPartialSuccess(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	disabled := seedToken(t, db, 1, "disabled-token", "disabled1234token5678")
+	expired := seedToken(t, db, 1, "expired-token", "expired1234token5678")
+
+	if err := db.Model(disabled).Update("status", common.TokenStatusDisabled).Error; err != nil {
+		t.Fatalf("failed to disable token: %v", err)
+	}
+	if err := db.Model(expired).Updates(map[string]any{
+		"status":       common.TokenStatusExpired,
+		"expired_time": common.GetTimestamp() - 3600,
+	}).Error; err != nil {
+		t.Fatalf("failed to expire token: %v", err)
+	}
+
+	body := map[string]any{
+		"ids":    []int{disabled.Id, expired.Id},
+		"status": common.TokenStatusEnabled,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/batch/status", body, 1)
+	BatchUpdateTokenStatus(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if !response.Success {
+		t.Fatalf("expected success response, got message: %s", response.Message)
+	}
+
+	var result tokenBatchStatusResponse
+	if err := common.Unmarshal(response.Data, &result); err != nil {
+		t.Fatalf("failed to decode batch status response: %v", err)
+	}
+	if result.UpdatedCount != 1 {
+		t.Fatalf("expected one updated token, got %d", result.UpdatedCount)
+	}
+	if result.FailedCount != 1 {
+		t.Fatalf("expected one failed token, got %d", result.FailedCount)
+	}
+	if len(result.FailedIDs) != 1 || result.FailedIDs[0] != expired.Id {
+		t.Fatalf("expected expired token id %d in failures, got %#v", expired.Id, result.FailedIDs)
+	}
+
+	var reloadedDisabled model.Token
+	if err := db.First(&reloadedDisabled, disabled.Id).Error; err != nil {
+		t.Fatalf("failed to reload disabled token: %v", err)
+	}
+	if reloadedDisabled.Status != common.TokenStatusEnabled {
+		t.Fatalf("expected disabled token to be enabled, got status %d", reloadedDisabled.Status)
+	}
+
+	var reloadedExpired model.Token
+	if err := db.First(&reloadedExpired, expired.Id).Error; err != nil {
+		t.Fatalf("failed to reload expired token: %v", err)
+	}
+	if reloadedExpired.Status != common.TokenStatusExpired {
+		t.Fatalf("expected expired token to remain expired, got status %d", reloadedExpired.Status)
 	}
 }

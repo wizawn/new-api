@@ -24,6 +24,7 @@ import {
   API,
   copy,
   showError,
+  showWarning,
   showSuccess,
   encodeToBase64,
 } from '../../helpers';
@@ -444,6 +445,46 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     }
   };
 
+  const batchUpdateTokenStatus = async (status) => {
+    if (selectedKeys.length === 0) {
+      showError(t('请至少选择一个令牌！'));
+      return;
+    }
+    if (![1, 2].includes(Number(status))) {
+      showError(t('不支持的令牌状态'));
+      return;
+    }
+    setLoading(true);
+    try {
+      const ids = selectedKeys.map((token) => token.id);
+      const res = await API.post('/api/token/batch/status', { ids, status });
+      const { success, message, data } = res.data || {};
+      if (!success) {
+        showError(message || t('批量更新令牌状态失败'));
+        return;
+      }
+      const updatedCount = Number(data?.updated_count) || 0;
+      const failedCount = Number(data?.failed_count) || 0;
+      if (failedCount > 0) {
+        showWarning(
+          t('批量状态更新完成，成功 {{updatedCount}} 个，失败 {{failedCount}} 个', {
+            updatedCount,
+            failedCount,
+          }),
+        );
+      } else {
+        showSuccess(
+          t('已批量更新 {{count}} 个令牌状态', { count: updatedCount }),
+        );
+      }
+      await refresh();
+    } catch (error) {
+      showError(error?.message || t('批量更新令牌状态失败'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Batch copy tokens
   const batchCopyTokens = async (copyType) => {
     if (selectedKeys.length === 0) {
@@ -548,6 +589,7 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     rowSelection,
     handleRow,
     batchDeleteTokens,
+    batchUpdateTokenStatus,
     batchCopyTokens,
     syncPageData,
 
