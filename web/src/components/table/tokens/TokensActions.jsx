@@ -29,6 +29,7 @@ const TokensActions = ({
   setShowEdit,
   batchCopyTokens,
   batchDeleteTokens,
+  refresh,
   t,
 }) => {
   // Modal states
@@ -83,6 +84,15 @@ const TokensActions = ({
           size='small'
         >
           {t('复制所选令牌')}
+        </Button>
+
+        <Button
+          type='tertiary'
+          className='flex-1 md:flex-initial'
+          onClick={() => refresh()}
+          size='small'
+        >
+          {t('刷新')}
         </Button>
 
         <Button

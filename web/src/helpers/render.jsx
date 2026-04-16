@@ -22,7 +22,6 @@ import { Modal, Tag, Typography, Avatar } from '@douyinfe/semi-ui';
 import { copy, showSuccess } from './utils';
 import { MOBILE_BREAKPOINT } from '../hooks/common/useIsMobile';
 import { visit } from 'unist-util-visit';
-import * as LobeIcons from '@lobehub/icons';
 import {
   OpenAI,
   Claude,
@@ -56,6 +55,11 @@ import {
   Jimeng,
   Perplexity,
   Replicate,
+  AzureAI,
+  Volcengine,
+  Grok,
+  Qingyan,
+  Together,
 } from '@lobehub/icons';
 
 import {
@@ -75,6 +79,7 @@ import {
   Package,
   Server,
   CalendarClock,
+  Bot,
 } from 'lucide-react';
 import {
   SiAtlassian,
@@ -89,7 +94,6 @@ import {
   SiGitlab,
   SiGoogle,
   SiKeycloak,
-  SiLinkedin,
   SiNextcloud,
   SiNotion,
   SiOkta,
@@ -101,6 +105,104 @@ import {
   SiWechat,
   SiX,
 } from 'react-icons/si';
+
+const LOBE_ICON_ENTRIES = {
+  OpenAI,
+  Claude,
+  Gemini,
+  Moonshot,
+  Zhipu,
+  Qwen,
+  DeepSeek,
+  Minimax,
+  Wenxin,
+  Spark,
+  Midjourney,
+  Hunyuan,
+  Cohere,
+  Cloudflare,
+  Ai360,
+  Yi,
+  Jina,
+  Mistral,
+  XAI,
+  Ollama,
+  Doubao,
+  Suno,
+  Xinference,
+  OpenRouter,
+  Dify,
+  Coze,
+  SiliconCloud,
+  FastGPT,
+  Kling,
+  Jimeng,
+  Perplexity,
+  Replicate,
+  AzureAI,
+  Volcengine,
+  Grok,
+  Qingyan,
+  Together,
+  Layers,
+  CircleUser,
+  Server,
+  Package,
+};
+
+const LOBE_ICON_ALIAS = {
+  xai: 'XAI',
+  '360': 'Ai360',
+  ai360: 'Ai360',
+  'open-router': 'OpenRouter',
+  openrouterai: 'OpenRouter',
+  openaicompatible: 'OpenAI',
+  anthropic: 'Claude',
+  claudeai: 'Claude',
+  azureopenai: 'AzureAI',
+  byteplus: 'Volcengine',
+  bytedance: 'Volcengine',
+  volc: 'Volcengine',
+  tencent: 'Hunyuan',
+  volcengineai: 'Volcengine',
+  'azure-ai': 'AzureAI',
+};
+
+const normalizeIconLookupKey = (value) =>
+  String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase();
+
+const LOBE_ICON_REGISTRY = Object.entries(LOBE_ICON_ENTRIES).reduce(
+  (acc, [key, iconComponent]) => {
+    acc[key] = iconComponent;
+    acc[key.toLowerCase()] = iconComponent;
+    acc[normalizeIconLookupKey(key)] = iconComponent;
+    return acc;
+  },
+  {},
+);
+
+const resolveLobeIconComponent = (rawKey) => {
+  const key = String(rawKey || '').trim();
+  if (!key) return undefined;
+
+  const direct =
+    LOBE_ICON_REGISTRY[key] ||
+    LOBE_ICON_REGISTRY[key.toLowerCase()] ||
+    LOBE_ICON_REGISTRY[normalizeIconLookupKey(key)];
+  if (direct) return direct;
+
+  const alias = LOBE_ICON_ALIAS[key] || LOBE_ICON_ALIAS[key.toLowerCase()];
+  if (!alias) return undefined;
+
+  return (
+    LOBE_ICON_REGISTRY[alias] ||
+    LOBE_ICON_REGISTRY[alias.toLowerCase()] ||
+    LOBE_ICON_REGISTRY[normalizeIconLookupKey(alias)]
+  );
+};
 
 // 获取侧边栏Lucide图标组件
 export function getLucideIcon(key, selected = false) {
@@ -143,6 +245,10 @@ export function getLucideIcon(key, selected = false) {
       return <Package {...commonProps} color={iconColor} />;
     case 'deployment':
       return <Server {...commonProps} color={iconColor} />;
+    case 'chatmock':
+      return <Server {...commonProps} color={iconColor} />;
+    case 'teamAutomation':
+      return <Bot {...commonProps} color={iconColor} />;
     case 'subscription':
       return <CalendarClock {...commonProps} color={iconColor} />;
     case 'setting':
@@ -330,6 +436,7 @@ export function getChannelIcon(channelType) {
     case 1: // OpenAI
     case 3: // Azure OpenAI
     case 57: // Codex
+    case 58: // ChatMock Pool
       return <OpenAI size={iconSize} />;
     case 2: // Midjourney Proxy
     case 5: // Midjourney Proxy Plus
@@ -420,17 +527,55 @@ export function getChannelIcon(channelType) {
  * @param {number} size - 图标大小，默认为 14
  * @returns {JSX.Element} - 对应的图标组件或 Avatar
  */
-export function getLobeHubIcon(iconName, size = 14) {
+export function getLobeHubIcon(iconName, size = 14, fallbackHint = '') {
+  const resolveFallbackSize = () => {
+    const numeric = Number(size);
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return Math.min(64, Math.max(14, numeric));
+    }
+    return 18;
+  };
+  const resolveFallbackLabel = () => {
+    const text = String(fallbackHint || iconName || 'AI')
+      .trim()
+      .replace(/[^a-zA-Z0-9\u4e00-\u9fa5]+/g, '');
+    if (!text) {
+      return 'AI';
+    }
+    return text.slice(0, 2).toUpperCase();
+  };
+  const renderFallbackAvatar = () => {
+    const fallbackSize = resolveFallbackSize();
+    const fontSize = Math.max(10, Math.round(fallbackSize * 0.42));
+    return (
+      <Avatar
+        size='small'
+        style={{
+          width: fallbackSize,
+          height: fallbackSize,
+          borderRadius: Math.max(6, Math.round(fallbackSize * 0.32)),
+          fontSize,
+          fontWeight: 700,
+          lineHeight: 1,
+          backgroundColor: '#e2e8f0',
+          color: '#1e293b',
+          border: '1px solid #cbd5e1',
+        }}
+      >
+        {resolveFallbackLabel()}
+      </Avatar>
+    );
+  };
   if (typeof iconName === 'string') iconName = iconName.trim();
   // 如果没有图标名称，返回 Avatar
   if (!iconName) {
-    return <Avatar size='extra-extra-small'>?</Avatar>;
+    return renderFallbackAvatar();
   }
 
   // 解析组件路径与点号链式属性
   const segments = String(iconName).split('.');
   const baseKey = segments[0];
-  const BaseIcon = LobeIcons[baseKey];
+  const BaseIcon = resolveLobeIconComponent(baseKey);
 
   let IconComponent = undefined;
   let propStartIndex = 1;
@@ -439,7 +584,7 @@ export function getLobeHubIcon(iconName, size = 14) {
     IconComponent = BaseIcon[segments[1]];
     propStartIndex = 2;
   } else {
-    IconComponent = LobeIcons[baseKey];
+    IconComponent = BaseIcon;
     propStartIndex = 1;
   }
 
@@ -448,8 +593,7 @@ export function getLobeHubIcon(iconName, size = 14) {
     !IconComponent ||
     (typeof IconComponent !== 'function' && typeof IconComponent !== 'object')
   ) {
-    const firstLetter = String(iconName).charAt(0).toUpperCase();
-    return <Avatar size='extra-extra-small'>{firstLetter}</Avatar>;
+    return renderFallbackAvatar();
   }
 
   // 解析点号链式属性，形如：key={...}、key='...'、key="..."、key=123、key、key=true/false
@@ -504,7 +648,7 @@ const oauthProviderIconMap = {
   google: SiGoogle,
   discord: SiDiscord,
   facebook: SiFacebook,
-  linkedin: SiLinkedin,
+  linkedin: CircleUser,
   x: SiX,
   twitter: SiX,
   slack: SiSlack,
@@ -780,7 +924,7 @@ export function renderText(text, limit) {
 export function renderGroup(group) {
   if (group === '') {
     return (
-      <Tag key='default' color='white' shape='circle'>
+      <Tag key='default' color='grey' shape='circle'>
         {i18next.t('用户分组')}
       </Tag>
     );

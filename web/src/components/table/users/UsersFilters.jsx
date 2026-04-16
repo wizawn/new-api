@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useRef } from 'react';
-import { Form, Button } from '@douyinfe/semi-ui';
+import { Form, Button, Select } from '@douyinfe/semi-ui';
 import { IconSearch } from '@douyinfe/semi-icons';
 
 const UsersFilters = ({
@@ -29,6 +29,11 @@ const UsersFilters = ({
   activePage,
   pageSize,
   groupOptions,
+  statusFilter,
+  onStatusFilterChange,
+  roleFilter,
+  onRoleFilterChange,
+  resetAllFilters,
   loading,
   searching,
   t,
@@ -36,6 +41,10 @@ const UsersFilters = ({
   const formApiRef = useRef(null);
 
   const handleReset = () => {
+    if (typeof resetAllFilters === 'function') {
+      resetAllFilters();
+      return;
+    }
     if (!formApiRef.current) return;
     formApiRef.current.reset();
     setTimeout(() => {
@@ -86,6 +95,32 @@ const UsersFilters = ({
             showClear
             pure
             size='small'
+          />
+        </div>
+        <div className='w-full md:w-36'>
+          <Select
+            size='small'
+            value={statusFilter}
+            onChange={onStatusFilterChange}
+            optionList={[
+              { label: t('全部状态'), value: 'all' },
+              { label: t('已启用'), value: 'enabled' },
+              { label: t('已禁用'), value: 'disabled' },
+              { label: t('已注销'), value: 'deleted' },
+            ]}
+          />
+        </div>
+        <div className='w-full md:w-36'>
+          <Select
+            size='small'
+            value={roleFilter}
+            onChange={onRoleFilterChange}
+            optionList={[
+              { label: t('全部角色'), value: 'all' },
+              { label: t('普通用户'), value: 'common' },
+              { label: t('管理员'), value: 'admin' },
+              { label: t('超级管理员'), value: 'root' },
+            ]}
           />
         </div>
         <div className='flex gap-2 w-full md:w-auto'>

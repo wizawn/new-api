@@ -21,16 +21,15 @@ import { useMemo } from 'react';
 
 export const useNavigation = (t, docsLink, headerNavModules) => {
   const mainNavLinks = useMemo(() => {
-    // 默认配置，如果没有传入配置则显示所有模块
     const defaultModules = {
       home: true,
       console: true,
       pricing: true,
       docs: true,
+      setup: true,
       about: true,
     };
 
-    // 使用传入的配置或默认配置
     const modules = headerNavModules || defaultModules;
 
     const allLinks = [
@@ -49,16 +48,16 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         itemKey: 'pricing',
         to: '/pricing',
       },
-      ...(docsLink
-        ? [
-            {
-              text: t('文档'),
-              itemKey: 'docs',
-              isExternal: true,
-              externalLink: docsLink,
-            },
-          ]
-        : []),
+      {
+        text: t('文档'),
+        itemKey: 'docs',
+        to: '/docs',
+      },
+      {
+        text: t('部署教程'),
+        itemKey: 'setup',
+        to: '/docs/setup',
+      },
       {
         text: t('关于'),
         itemKey: 'about',
@@ -66,20 +65,22 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
       },
     ];
 
-    // 根据配置过滤导航链接
     return allLinks.filter((link) => {
-      if (link.itemKey === 'docs') {
-        return docsLink && modules.docs;
-      }
       if (link.itemKey === 'pricing') {
-        // 支持新的pricing配置格式
         return typeof modules.pricing === 'object'
           ? modules.pricing.enabled
           : modules.pricing;
       }
-      return modules[link.itemKey] === true;
+      if (link.itemKey === 'setup') {
+        if (typeof modules.setup === 'boolean') {
+          return modules.setup;
+        }
+        return modules.docs !== false;
+      }
+      const enabled = modules[link.itemKey];
+      return enabled !== false;
     });
-  }, [t, docsLink, headerNavModules]);
+  }, [t, headerNavModules]);
 
   return {
     mainNavLinks,

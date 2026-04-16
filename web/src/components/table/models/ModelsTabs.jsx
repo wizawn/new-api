@@ -113,7 +113,7 @@ const ModelsTabs = ({
             itemKey={key}
             tab={
               <span className='flex items-center gap-2'>
-                {getLobeHubIcon(vendor.icon || 'Layers', 14)}
+                {getLobeHubIcon(vendor.icon || 'Layers', 14, vendor.name)}
                 {vendor.name}
                 <Tag
                   color={activeVendorKey === key ? 'red' : 'grey'}

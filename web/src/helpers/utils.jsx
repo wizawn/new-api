@@ -65,6 +65,20 @@ export function getUserIdFromLocalStorage() {
   return user.id;
 }
 
+export function getUserAccessTokenFromLocalStorage() {
+  const raw = localStorage.getItem('user');
+  if (!raw) return '';
+  let user;
+  try {
+    user = JSON.parse(raw);
+  } catch {
+    return '';
+  }
+  const token = String(user?.token || '').trim();
+  if (!token) return '';
+  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
+}
+
 export function getFooterHTML() {
   return localStorage.getItem('footer_html');
 }

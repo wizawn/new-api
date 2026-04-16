@@ -22,6 +22,7 @@ import (
 	"github.com/QuantumNous/new-api/relay"
 	"github.com/QuantumNous/new-api/router"
 	"github.com/QuantumNous/new-api/service"
+	"github.com/QuantumNous/new-api/setting"
 	_ "github.com/QuantumNous/new-api/setting/performance_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
@@ -111,6 +112,11 @@ func main() {
 
 	// Subscription quota reset task (daily/weekly/monthly/custom)
 	service.StartSubscriptionQuotaResetTask()
+
+	// ChatMock background tasks (enabled by env switches only)
+	service.StartChatMockAccountHealthCheckTask()
+	service.StartChatMockEntitlementCheckTask()
+	service.StartChatMockMailboxPollingTask()
 
 	// Wire task polling adaptor factory (breaks service -> relay import cycle)
 	service.GetTaskAdaptorFunc = func(platform constant.TaskPlatform) service.TaskPollingAdaptor {
@@ -251,6 +257,9 @@ func InitResources() error {
 
 	// 加载环境变量
 	common.InitEnv()
+	// setting/chatmock 在包 init 阶段会先读一轮环境变量，这里在 .env 加载后再同步一次，
+	// 避免运行态与配置文件不一致（例如 CHATMOCK_MAILBOX_ENABLED）。
+	setting.ReloadChatMockFromEnv()
 
 	logger.SetupLogger()
 

@@ -188,8 +188,33 @@ func GetMaxUserId() int {
 	return user.Id
 }
 
-func GetAllUsers(pageInfo *common.PageInfo) (users []*User, total int64, err error) {
-	// Start transaction
+func applyUserStatusFilter(query *gorm.DB, statusFilter string) *gorm.DB {
+	switch strings.ToLower(strings.TrimSpace(statusFilter)) {
+	case "enabled":
+		return query.Where("deleted_at IS NULL").Where("status = ?", common.UserStatusEnabled)
+	case "disabled":
+		return query.Where("deleted_at IS NULL").Where("status = ?", common.UserStatusDisabled)
+	case "deleted":
+		return query.Where("deleted_at IS NOT NULL")
+	default:
+		return query
+	}
+}
+
+func applyUserRoleFilter(query *gorm.DB, roleFilter string) *gorm.DB {
+	switch strings.ToLower(strings.TrimSpace(roleFilter)) {
+	case "common":
+		return query.Where("role = ?", common.RoleCommonUser)
+	case "admin":
+		return query.Where("role = ?", common.RoleAdminUser)
+	case "root":
+		return query.Where("role = ?", common.RoleRootUser)
+	default:
+		return query
+	}
+}
+
+func GetAllUsers(pageInfo *common.PageInfo, statusFilter string, roleFilter string) (users []*User, total int64, err error) {
 	tx := DB.Begin()
 	if tx.Error != nil {
 		return nil, 0, tx.Error
@@ -200,21 +225,22 @@ func GetAllUsers(pageInfo *common.PageInfo) (users []*User, total int64, err err
 		}
 	}()
 
-	// Get total count within transaction
-	err = tx.Unscoped().Model(&User{}).Count(&total).Error
+	query := tx.Unscoped().Model(&User{})
+	query = applyUserStatusFilter(query, statusFilter)
+	query = applyUserRoleFilter(query, roleFilter)
+
+	err = query.Count(&total).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
 
-	// Get paginated users within same transaction
-	err = tx.Unscoped().Order("id desc").Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Omit("password").Find(&users).Error
+	err = query.Order("id desc").Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Omit("password").Find(&users).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, 0, err
 	}
 
-	// Commit transaction
 	if err = tx.Commit().Error; err != nil {
 		return nil, 0, err
 	}
@@ -222,7 +248,7 @@ func GetAllUsers(pageInfo *common.PageInfo) (users []*User, total int64, err err
 	return users, total, nil
 }
 
-func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, int64, error) {
+func SearchUsers(keyword string, group string, statusFilter string, roleFilter string, startIdx int, num int) ([]*User, int64, error) {
 	var users []*User
 	var total int64
 	var err error
@@ -266,6 +292,9 @@ func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, 
 				"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
 		}
 	}
+
+	query = applyUserStatusFilter(query, statusFilter)
+	query = applyUserRoleFilter(query, roleFilter)
 
 	// 获取总数
 	err = query.Count(&total).Error

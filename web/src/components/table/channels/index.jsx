@@ -25,6 +25,7 @@ import ChannelsTable from './ChannelsTable';
 import ChannelsActions from './ChannelsActions';
 import ChannelsFilters from './ChannelsFilters';
 import ChannelsTabs from './ChannelsTabs';
+import ChannelsOverview from './ChannelsOverview';
 import { useChannelsData } from '../../../hooks/channels/useChannelsData';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
 import BatchTagModal from './modals/BatchTagModal';
@@ -93,6 +94,7 @@ const ChannelsPage = () => {
       ) : null}
       <CardPro
         type='type3'
+        descriptionArea={<ChannelsOverview {...channelsData} />}
         tabsArea={<ChannelsTabs {...channelsData} />}
         actionsArea={<ChannelsActions {...channelsData} />}
         searchArea={<ChannelsFilters {...channelsData} />}

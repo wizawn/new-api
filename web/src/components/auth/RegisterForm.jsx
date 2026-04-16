@@ -64,10 +64,11 @@ import { UserContext } from '../../context/User';
 import { StatusContext } from '../../context/Status';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import AuthShell from './AuthShell';
 
 const RegisterForm = () => {
   let navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const githubButtonTextKeyByState = {
     idle: '使用 GitHub 继续',
     redirecting: '正在跳转 GitHub...',
@@ -110,6 +111,7 @@ const RegisterForm = () => {
   const [githubButtonDisabled, setGithubButtonDisabled] = useState(false);
   const githubTimeoutRef = useRef(null);
   const githubButtonText = t(githubButtonTextKeyByState[githubButtonState]);
+  const isEnglish = i18n.language.startsWith('en');
 
   const logo = getLogo();
   const systemName = getSystemName();
@@ -770,25 +772,42 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className='relative overflow-hidden bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-      {/* 背景模糊晕染球 */}
-      <div
-        className='blur-ball blur-ball-indigo'
-        style={{ top: '-80px', right: '-80px', transform: 'none' }}
-      />
-      <div
-        className='blur-ball blur-ball-teal'
-        style={{ top: '50%', left: '-120px' }}
-      />
-      <div className='w-full max-w-sm mt-[60px]'>
-        {showEmailRegister ||
-        !hasOAuthRegisterOptions
+    <AuthShell
+      logo={logo}
+      systemName={systemName}
+      badge={isEnglish ? 'Create Access' : '创建入口'}
+      title={
+        isEnglish
+          ? 'Create your workspace and start routing model traffic in minutes.'
+          : '创建你的工作区，几分钟内开始统一路由模型流量。'
+      }
+      description={
+        isEnglish
+          ? 'Registration opens the same gateway used for docs, tokens, model browsing, and production deployment upgrades.'
+          : '注册后即可进入同一套网关体系，继续管理文档、令牌、模型浏览和生产部署升级。'
+      }
+      highlights={
+        isEnglish
+          ? [
+              'One account for tokens, model access, and console operations.',
+              'Use the setup guide immediately after registration to verify deployment.',
+              'Keep the UI path modern without touching the core auth implementation.',
+            ]
+          : [
+              '一个账号统一管理令牌、模型访问和控制台操作。',
+              '注册后可立即通过部署教程验证环境。',
+              '界面重构与核心鉴权逻辑完全分离，避免功能回归。',
+            ]
+      }
+    >
+      <div className='w-full max-w-sm'>
+        {showEmailRegister || !hasOAuthRegisterOptions
           ? renderEmailRegisterForm()
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}
 
         {turnstileEnabled && (
-          <div className='flex justify-center mt-6'>
+          <div className='mt-6 flex justify-center'>
             <Turnstile
               sitekey={turnstileSiteKey}
               onVerify={(token) => {
@@ -798,7 +817,7 @@ const RegisterForm = () => {
           </div>
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

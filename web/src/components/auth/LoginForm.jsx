@@ -66,10 +66,11 @@ import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import AuthShell from './AuthShell';
 
 const LoginForm = () => {
   let navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const githubButtonTextKeyByState = {
     idle: '使用 GitHub 继续',
     redirecting: '正在跳转 GitHub...',
@@ -112,6 +113,7 @@ const LoginForm = () => {
   const githubTimeoutRef = useRef(null);
   const githubButtonText = t(githubButtonTextKeyByState[githubButtonState]);
   const [customOAuthLoading, setCustomOAuthLoading] = useState({});
+  const isEnglish = i18n.language.startsWith('en');
 
   const logo = getLogo();
   const systemName = getSystemName();
@@ -947,26 +949,43 @@ const LoginForm = () => {
   };
 
   return (
-    <div className='relative overflow-hidden bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-      {/* 背景模糊晕染球 */}
-      <div
-        className='blur-ball blur-ball-indigo'
-        style={{ top: '-80px', right: '-80px', transform: 'none' }}
-      />
-      <div
-        className='blur-ball blur-ball-teal'
-        style={{ top: '50%', left: '-120px' }}
-      />
-      <div className='w-full max-w-sm mt-[60px]'>
-        {showEmailLogin ||
-        !hasOAuthLoginOptions
+    <AuthShell
+      logo={logo}
+      systemName={systemName}
+      badge={isEnglish ? 'Secure Access' : '安全登录'}
+      title={
+        isEnglish
+          ? 'Keep one gateway and one control surface for all model traffic.'
+          : '为所有模型流量保留一个网关入口和一个控制面。'
+      }
+      description={
+        isEnglish
+          ? 'Sign in to manage keys, models, pricing, docs, and deployment guidance without splitting your workflow across multiple tools.'
+          : '登录后即可统一管理密钥、模型、计费、文档和部署流程，不再把工作流拆散到多套工具里。'
+      }
+      highlights={
+        isEnglish
+          ? [
+              'Unified authentication, billing, and documentation entrypoint.',
+              'Compatible with OpenAI-style clients while routing multiple vendors.',
+              'Deployment notes now match the actual embedded frontend architecture.',
+            ]
+          : [
+              '统一处理鉴权、计费和文档入口。',
+              '兼容 OpenAI 客户端，同时在后端路由多家模型供应商。',
+              '部署说明已按真实的前端嵌入式架构对齐。',
+            ]
+      }
+    >
+      <div className='w-full max-w-sm'>
+        {showEmailLogin || !hasOAuthLoginOptions
           ? renderEmailLoginForm()
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}
         {render2FAModal()}
 
         {turnstileEnabled && (
-          <div className='flex justify-center mt-6'>
+          <div className='mt-6 flex justify-center'>
             <Turnstile
               sitekey={turnstileSiteKey}
               onVerify={(token) => {
@@ -976,7 +995,7 @@ const LoginForm = () => {
           </div>
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

@@ -97,7 +97,7 @@ const renderGroupColumn = (text, record, t) => {
         )}
         position='top'
       >
-        <Tag color='white' shape='circle'>
+        <Tag color='grey' shape='circle'>
           {t('智能熔断')}
           {record && record.cross_group_retry ? `(${t('跨分组')})` : ''}
         </Tag>
@@ -237,7 +237,7 @@ const renderModelLimits = (text, record, t) => {
     return <AvatarGroup size='extra-extra-small'>{vendorAvatars}</AvatarGroup>;
   } else {
     return (
-      <Tag color='white' shape='circle'>
+      <Tag color='grey' shape='circle'>
         {t('无限制')}
       </Tag>
     );
@@ -248,7 +248,7 @@ const renderModelLimits = (text, record, t) => {
 const renderAllowIps = (text, t) => {
   if (!text || text.trim() === '') {
     return (
-      <Tag color='white' shape='circle'>
+      <Tag color='grey' shape='circle'>
         {t('无限制')}
       </Tag>
     );
@@ -300,7 +300,7 @@ const renderQuotaUsage = (text, record, t) => {
     );
     return (
       <Popover content={popoverContent} position='top'>
-        <Tag color='white' shape='circle'>
+        <Tag color='grey' shape='circle'>
           {t('无限额度')}
         </Tag>
       </Popover>
@@ -322,7 +322,7 @@ const renderQuotaUsage = (text, record, t) => {
   );
   return (
     <Popover content={popoverContent} position='top'>
-      <Tag color='white' shape='circle'>
+      <Tag color='grey' shape='circle'>
         <div className='flex flex-col items-end'>
           <span className='text-xs leading-none'>{`${renderQuota(remain)} / ${renderQuota(total)}`}</span>
           <Progress

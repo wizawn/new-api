@@ -149,7 +149,7 @@ const renderDuration = (text, record, t) => {
 const renderEnabled = (text, record, t) => {
   return text ? (
     <Tag
-      color='white'
+      color='grey'
       shape='circle'
       type='light'
       prefixIcon={<Badge dot type='success' />}
@@ -158,7 +158,7 @@ const renderEnabled = (text, record, t) => {
     </Tag>
   ) : (
     <Tag
-      color='white'
+      color='grey'
       shape='circle'
       type='light'
       prefixIcon={<Badge dot type='danger' />}

@@ -31,6 +31,17 @@ import { Copy, Users, BarChart2, TrendingUp, Gift, Zap } from 'lucide-react';
 
 const { Text } = Typography;
 
+const coverMainTextStyle = {
+  color: '#ffffff',
+  textShadow: '0 1px 3px rgba(15, 23, 42, 0.65)',
+};
+
+const coverSubTextStyle = {
+  color: 'rgba(255, 255, 255, 0.92)',
+  fontSize: '12px',
+  textShadow: '0 1px 2px rgba(15, 23, 42, 0.55)',
+};
+
 const InvitationCard = ({
   t,
   userState,
@@ -61,10 +72,11 @@ const InvitationCard = ({
           className='!rounded-xl w-full'
           cover={
             <div
-              className='relative h-30'
+              className='relative min-h-[132px]'
               style={{
-                '--palette-primary-darkerChannel': '0 75 80',
-                backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 80%), rgba(var(--palette-primary-darkerChannel) / 80%)), url('/cover-4.webp')`,
+                '--palette-primary-darkerChannel': '15 23 42',
+                backgroundColor: '#0f172a',
+                backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 86%), rgba(var(--palette-primary-darkerChannel) / 86%)), url('/cover-4.webp')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -73,7 +85,7 @@ const InvitationCard = ({
               {/* 标题和按钮 */}
               <div className='relative z-10 h-full flex flex-col justify-between p-4'>
                 <div className='flex justify-between items-center'>
-                  <Text strong style={{ color: 'white', fontSize: '16px' }}>
+                  <Text strong style={{ ...coverMainTextStyle, fontSize: '16px' }}>
                     {t('收益统计')}
                   </Text>
                   <Button
@@ -96,24 +108,16 @@ const InvitationCard = ({
                 <div className='grid grid-cols-3 gap-6 mt-4'>
                   {/* 待使用收益 */}
                   <div className='text-center'>
-                    <div
-                      className='text-base sm:text-2xl font-bold mb-2'
-                      style={{ color: 'white' }}
-                    >
+                    <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                       {renderQuota(userState?.user?.aff_quota || 0)}
                     </div>
                     <div className='flex items-center justify-center text-sm'>
                       <TrendingUp
                         size={14}
                         className='mr-1'
-                        style={{ color: 'rgba(255,255,255,0.8)' }}
+                        style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                       />
-                      <Text
-                        style={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '12px',
-                        }}
-                      >
+                      <Text style={coverSubTextStyle}>
                         {t('待使用收益')}
                       </Text>
                     </div>
@@ -121,24 +125,16 @@ const InvitationCard = ({
 
                   {/* 总收益 */}
                   <div className='text-center'>
-                    <div
-                      className='text-base sm:text-2xl font-bold mb-2'
-                      style={{ color: 'white' }}
-                    >
+                    <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                       {renderQuota(userState?.user?.aff_history_quota || 0)}
                     </div>
                     <div className='flex items-center justify-center text-sm'>
                       <BarChart2
                         size={14}
                         className='mr-1'
-                        style={{ color: 'rgba(255,255,255,0.8)' }}
+                        style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                       />
-                      <Text
-                        style={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '12px',
-                        }}
-                      >
+                      <Text style={coverSubTextStyle}>
                         {t('总收益')}
                       </Text>
                     </div>
@@ -146,24 +142,16 @@ const InvitationCard = ({
 
                   {/* 邀请人数 */}
                   <div className='text-center'>
-                    <div
-                      className='text-base sm:text-2xl font-bold mb-2'
-                      style={{ color: 'white' }}
-                    >
+                    <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                       {userState?.user?.aff_count || 0}
                     </div>
                     <div className='flex items-center justify-center text-sm'>
                       <Users
                         size={14}
                         className='mr-1'
-                        style={{ color: 'rgba(255,255,255,0.8)' }}
+                        style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                       />
-                      <Text
-                        style={{
-                          color: 'rgba(255,255,255,0.8)',
-                          fontSize: '12px',
-                        }}
-                      >
+                      <Text style={coverSubTextStyle}>
                         {t('邀请人数')}
                       </Text>
                     </div>

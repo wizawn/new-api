@@ -34,6 +34,18 @@ import {
 } from '../../../../helpers';
 import { Coins, BarChart2, Users } from 'lucide-react';
 
+const coverTitleStyle = {
+  color: '#ffffff',
+  textShadow: '0 1px 3px rgba(15, 23, 42, 0.65)',
+};
+
+const coverTagStyle = {
+  color: '#ffffff',
+  backgroundColor: 'rgba(15, 23, 42, 0.72)',
+  border: '1px solid rgba(255, 255, 255, 0.28)',
+  textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)',
+};
+
 const UserInfoHeader = ({ t, userState }) => {
   const getUsername = () => {
     if (userState.user) {
@@ -58,8 +70,9 @@ const UserInfoHeader = ({ t, userState }) => {
         <div
           className='relative h-32'
           style={{
-            '--palette-primary-darkerChannel': '0 75 80',
-            backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 80%), rgba(var(--palette-primary-darkerChannel) / 80%)), url('/cover-4.webp')`,
+            '--palette-primary-darkerChannel': '15 23 42',
+            backgroundColor: '#0f172a',
+            backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 86%), rgba(var(--palette-primary-darkerChannel) / 86%)), url('/cover-4.webp')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -75,37 +88,25 @@ const UserInfoHeader = ({ t, userState }) => {
                 <div className='flex-1 min-w-0 flex flex-col justify-between'>
                   <div
                     className='text-3xl font-bold truncate'
-                    style={{ color: 'white' }}
+                    style={coverTitleStyle}
                   >
                     {getUsername()}
                   </div>
                   <div className='flex flex-wrap items-center gap-2'>
                     {isRoot() ? (
-                      <Tag
-                        size='large'
-                        shape='circle'
-                        style={{ color: 'white' }}
-                      >
+                      <Tag size='large' shape='circle' style={coverTagStyle}>
                         {t('超级管理员')}
                       </Tag>
                     ) : isAdmin() ? (
-                      <Tag
-                        size='large'
-                        shape='circle'
-                        style={{ color: 'white' }}
-                      >
+                      <Tag size='large' shape='circle' style={coverTagStyle}>
                         {t('管理员')}
                       </Tag>
                     ) : (
-                      <Tag
-                        size='large'
-                        shape='circle'
-                        style={{ color: 'white' }}
-                      >
+                      <Tag size='large' shape='circle' style={coverTagStyle}>
                         {t('普通用户')}
                       </Tag>
                     )}
-                    <Tag size='large' shape='circle' style={{ color: 'white' }}>
+                    <Tag size='large' shape='circle' style={coverTagStyle}>
                       ID: {userState?.user?.id}
                     </Tag>
                   </div>
@@ -119,7 +120,10 @@ const UserInfoHeader = ({ t, userState }) => {
       {/* 当前余额和桌面版统计信息 */}
       <div className='flex items-start justify-between gap-6'>
         {/* 当前余额显示 */}
-        <Badge count={t('当前余额')} position='rightTop' type='danger'>
+        <Badge
+          count={<span className='personal-balance-badge'>{t('当前余额')}</span>}
+          position='rightTop'
+        >
           <div className='text-2xl sm:text-3xl md:text-4xl font-bold tracking-wide'>
             {renderQuota(userState?.user?.quota)}
           </div>

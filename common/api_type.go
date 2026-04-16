@@ -75,6 +75,9 @@ func ChannelType2APIType(channelType int) (int, bool) {
 		apiType = constant.APITypeReplicate
 	case constant.ChannelTypeCodex:
 		apiType = constant.APITypeCodex
+	case constant.ChannelTypeChatMock:
+		// ChatMock pool relays OpenAI-compatible chat completions.
+		apiType = constant.APITypeOpenAI
 	}
 	if apiType == -1 {
 		return constant.APITypeOpenAI, false

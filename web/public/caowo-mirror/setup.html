@@ -1,0 +1,416 @@
+<!DOCTYPE html><html lang="zh"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一键配置 - Caowo</title>
+<style>
+:root { --bg:#fef7ed; --card:#ffffff; --border:#e5e0d8; --accent:#e07a2f; --accent2:#c2610a; --text:#3d2e1f; --muted:#8c7a68; --green:#2d8a4e; --red:#c93b3b; --yellow:#b8860b; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.header { text-align:center; padding:40px 20px 20px; }
+.header h1 { font-size:1.6rem; margin-bottom:6px; }
+.header h1 span { color:var(--accent); }
+.header p { color:var(--muted); font-size:.9rem; }
+.quick-links{display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.quick-link{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);text-decoration:none;font-size:.82rem;font-weight:600;transition:all .2s}
+.quick-link:hover{border-color:var(--accent);color:var(--accent2);box-shadow:0 2px 8px rgba(37,99,235,.16)}
+.container { max-width:800px; margin:0 auto; padding:0 20px 40px; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--card); border-radius:12px; padding:4px; }
+.tab { flex:1; padding:10px; text-align:center; cursor:pointer; border-radius:10px; color:var(--muted); font-size:.9rem; transition:all .2s; border:none; background:none; position:relative; }
+.tab.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(224,122,47,.3); }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* Cards */
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+.card h3 { font-size:1rem; color:var(--accent2); margin-bottom:16px; }
+.tools { display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; }
+.tool-btn {
+  padding:10px 20px; border-radius:10px; cursor:pointer; font-size:.85rem;
+  border:2px solid var(--border); background:transparent; color:var(--text); transition:all .2s;
+  display:flex; align-items:center; gap:8px;
+}
+.tool-btn:hover { border-color:var(--accent); }
+.tool-btn.active { border-color:var(--accent); background:rgba(224,122,47,.1); }
+.tool-btn .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); }
+.tool-btn.active .dot { background:var(--green); }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:.8rem; color:var(--muted); margin-bottom:6px; }
+.input {
+  width:100%; padding:10px 14px; background:#fff9f0; border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-size:.9rem; outline:none; transition:border .2s; font-family:monospace;
+}
+.input:focus { border-color:var(--accent); }
+.input:disabled { opacity:.4; }
+.base-url { color:var(--accent2); font-weight:600; }
+.model-select {
+  padding:8px 12px; background:#fff9f0; border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-size:.85rem; outline:none; width:100%;
+}
+.model-select option { background:#fff; }
+
+/* Buttons */
+.btn {
+  padding:12px 28px; border:none; border-radius:10px; cursor:pointer; font-size:.9rem;
+  font-weight:600; transition:all .2s; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-primary { background:linear-gradient(135deg,#e07a2f,#d4621a); color:#fff; box-shadow:0 4px 15px rgba(224,122,47,.3); }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(224,122,47,.4); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-test { background:transparent; border:2px solid var(--border); color:var(--text); padding:10px 20px; font-size:.85rem; }
+.btn-test:hover { border-color:var(--accent); }
+.btn-test:disabled { opacity:.4; cursor:not-allowed; }
+.btn-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+
+/* Generated result */
+.gen-result { display:none; margin-top:20px; }
+.gen-result.show { display:block; }
+.step { display:flex; gap:12px; margin-bottom:20px; }
+.step-num {
+  width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700;
+  flex-shrink:0; margin-top:2px;
+}
+.step-body { flex:1; }
+.step-body h4 { font-size:.9rem; margin-bottom:4px; }
+.step-body p { font-size:.82rem; color:var(--muted); line-height:1.6; }
+.step-body code { background:#fff3e0; padding:2px 6px; border-radius:4px; font-size:.8rem; color:var(--accent2); }
+
+.cmd-box {
+  background:#3d2e1f; border:1px solid #5a4636; border-radius:10px; padding:16px; padding-right:80px;
+  font-family:'SF Mono',Monaco,Consolas,monospace; font-size:.82rem; line-height:1.6;
+  position:relative; white-space:pre-wrap; word-break:break-all; color:#f5deb3;
+  user-select:all; -webkit-user-select:all;
+}
+.cmd-box .comment { color:var(--muted); }
+.copy-btn {
+  position:absolute; top:8px; right:8px; padding:6px 14px; border-radius:6px;
+  background:var(--accent); color:#fff; border:none; cursor:pointer; font-size:.78rem; font-weight:500;
+}
+.copy-btn:hover { background:var(--accent2); }
+
+/* Alert / Status */
+.alert {
+  padding:12px 16px; border-radius:8px; font-size:.82rem; margin-top:12px; display:none;
+}
+.alert.ok { display:flex; align-items:center; gap:8px; background:#eaf5ee; color:var(--green); border:1px solid #b8dcc5; }
+.alert.err { display:flex; align-items:center; gap:8px; background:#fceaea; color:var(--red); border:1px solid #f0bfbf; }
+.alert.warn { display:flex; align-items:center; gap:8px; background:#fdf5e6; color:var(--yellow); border:1px solid #e8d5a0; }
+.alert.loading { display:flex; align-items:center; gap:8px; background:#fef0e0; color:var(--accent2); border:1px solid #e8c9a0; }
+.spinner { width:16px; height:16px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#d4c4b0; border-radius:3px; }
+</style>
+<style>
+/* caowo override: yesterday setup palette */
+:root{--bg:#f8fafc;--card:#ffffff;--border:#e5e7eb;--accent:#2563eb;--accent2:#1d4ed8;--text:#111827;--muted:#4b5563;--green:#16a34a;--red:#dc2626;--yellow:#ca8a04}
+body{background:var(--bg)!important;color:var(--text)!important}
+.card,.tabs{background:#fff!important;border:1px solid var(--border)!important;box-shadow:0 1px 4px rgba(0,0,0,.04)!important}
+.card h3{color:#1f2937!important}
+.input,.model-select{background:#fff!important;border:1px solid var(--border)!important;color:#111827!important}
+.input:focus,.model-select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(37,99,235,.15)!important}
+.base-url{color:#1d4ed8!important}
+.btn-primary{background:#1d4ed8!important;box-shadow:0 4px 14px rgba(37,99,235,.28)!important;border:1px solid #1e40af!important}
+.btn-primary:hover{background:#1e40af!important}
+.btn-test,.tool-btn{border-color:var(--border)!important;color:#111827!important;background:#fff!important}
+.tool-btn.active{border-color:#2563eb!important;background:#dbeafe!important;color:#1e3a8a!important;font-weight:700!important}
+.cmd-box{background:#f8fafc!important;border-color:#cbd5e1!important;color:#0f172a!important}
+.cmd-box .comment{color:#475569!important}
+.tab.active{background:#2563eb!important;color:#fff!important}
+.worker-token-tip{margin-top:8px;padding:10px 12px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;color:#1e3a8a;font-size:.78rem;line-height:1.55}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Caowo</span> 一键配置</h1>
+  <p>快速配置 Codex CLI 与 Claude Code 连接中转站</p>
+  <div class="quick-links">
+    <a class="quick-link" href="/docs" target="_top">返回文档中心</a>
+    <a class="quick-link" href="https://api.caowo.de/console" target="_blank" rel="noopener noreferrer">控制台入口</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active">一键配置</button>
+  </div>
+
+  <!-- Setup Tab -->
+  <div id="tab-setup" class="tab-content active">
+
+    <div class="card" id="toolCard">
+      <h3>选择工具</h3>
+      <div class="tools">
+        <button class="tool-btn active" onclick="selectTool('codex')"><span class="dot"></span>OpenAI Codex</button>
+        <button class="tool-btn" onclick="selectTool('claude')"><span class="dot"></span>Claude Code</button>
+        <button class="tool-btn" onclick="selectTool('gemini')"><span class="dot"></span>Gemini CLI</button>
+      </div>
+    </div>
+
+    <div class="card" id="configCard">
+      <h3>填写配置</h3>
+      <div class="form-group">
+        <label>Base URL（已预填，无需修改）</label>
+        <input class="input base-url" id="baseUrl" value="https://api.caowo.de" readonly="">
+      </div>
+      <div class="form-group">
+        <label>API Key（在中转站获取）<span style="color:var(--red);margin-left:4px;">*</span></label>
+        <input class="input" id="apiKey" placeholder="请输入你的 API Key" autocomplete="off">
+        <div class="worker-token-tip">Worker Token 就是你在控制台创建的 API Key。部分客户端把 API Key 字段命名为 Worker Token，填写同一个值即可。</div>
+      </div>
+      <div class="form-group" id="modelGroup">
+        <label>模型（可选）</label>
+        <select class="model-select" id="modelSelect">
+          <option value="">默认 (gpt-5.4-codex)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="genBtn" onclick="generate()">生成配置</button>
+        <button class="btn btn-test" id="testBtn" onclick="testConnection()">测试连通性</button>
+      </div>
+      <div id="testAlert" class="alert"></div>
+    </div>
+
+    <div class="gen-result" id="genResult">
+      <div class="card">
+        <h3>配置步骤</h3>
+        <div id="steps"></div>
+        <div id="cmdSection">
+          <label style="font-size:.8rem; color:var(--muted); margin-bottom:8px; display:block;">复制以下命令到终端执行：</label>
+          <div class="cmd-box" id="cmdBox"><button class="copy-btn" onclick="copyCmd()">复制</button></div>
+        </div>
+        <div id="configFileSection" style="margin-top:12px;">
+          <label style="font-size:.8rem; color:var(--muted); margin-bottom:8px; display:block;" id="downloadLabel">或者直接下载配置文件：</label>
+          <button class="tool-btn" onclick="downloadConfig()" style="display:inline-flex;" id="downloadBtn">下载 config.toml</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="unavailableMsg" class="card" style="display:none; text-align:center; padding:48px 24px;">
+      <div style="font-size:2rem;margin-bottom:12px;">🚧</div>
+      <h3 style="color:var(--muted);margin-bottom:8px;">中转站暂未开放此系列模型</h3>
+      <p style="color:var(--muted);font-size:.85rem;">敬请期待，如有需求请联系客服</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://api.caowo.de';let currentTool = 'codex';
+const MODELS = {
+  codex: [
+    {v:'', t:'默认 (gpt-5.4-codex)'},
+    {v:'gpt-5.4-codex', t:'GPT-5.4 Codex'},
+    {v:'gpt-5.4', t:'GPT-5.4'},
+    {v:'gpt-5.3-codex', t:'GPT-5.3 Codex'},
+    {v:'gpt-5-codex', t:'GPT-5 Codex'},
+    {v:'o3', t:'o3'},
+    {v:'o4-mini', t:'o4-mini'},
+  ],
+  claude: [
+    {v:'', t:'默认 (claude-sonnet-4-6)'},
+    {v:'claude-sonnet-4-6', t:'Claude Sonnet 4.6'},
+    {v:'claude-opus-4-6', t:'Claude Opus 4.6'},
+    {v:'claude-opus-4-5-20251101', t:'Claude Opus 4.5'},
+    {v:'claude-sonnet-4-5-20250929', t:'Claude Sonnet 4.5'},
+    {v:'claude-haiku-4-5-20251001', t:'Claude Haiku 4.5'},
+  ]
+};
+
+function selectTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const configCard = document.getElementById('configCard');
+  const genResult = document.getElementById('genResult');
+  const unavail = document.getElementById('unavailableMsg');
+  const sel = document.getElementById('modelSelect');
+  const downloadLabel = document.getElementById('downloadLabel');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  if (tool === 'gemini') {
+    configCard.style.display = 'none';
+    genResult.classList.remove('show');
+    unavail.style.display = 'block';
+  } else {
+    configCard.style.display = 'block';
+    unavail.style.display = 'none';
+    sel.innerHTML = MODELS[tool].map(m => `<option value="${m.v}">${m.t}</option>`).join('');
+    if (tool === 'claude') {
+      downloadLabel.textContent = '或者直接下载环境变量脚本：';
+      downloadBtn.textContent = '下载 claude-code-env.sh';
+    } else {
+      downloadLabel.textContent = '或者直接下载配置文件：';
+      downloadBtn.textContent = '下载 config.toml';
+    }
+  }
+}
+
+function generate() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) {
+    showAlert('testAlert', 'warn', '请先输入 API Key');
+    document.getElementById('apiKey').focus();
+    return;
+  }
+  const model = document.getElementById('modelSelect').value;
+  const genResult = document.getElementById('genResult');
+  const stepsDiv = document.getElementById('steps');
+  const cmdBox = document.getElementById('cmdBox');
+
+  let cmd = '';
+  if (currentTool === 'claude') {
+    const claudeModel = model || 'claude-sonnet-4-6';
+    stepsDiv.innerHTML = `
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4>安装 Claude Code</h4><p>请先安装并打开 <code>Claude Code</code> 官方客户端。</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4>写入环境变量</h4><p>复制下方命令执行，或直接下载脚本后 <code>source</code> 执行。</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4>重新打开 Claude Code</h4><p style="color:var(--red);font-weight:600;">重要：如果 Claude Code 已经开着，请先完全退出后重新打开，让新的环境变量生效。</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><h4>开始使用</h4><p>终端运行 <code>claude</code>，或在 Claude Code 中直接开始对话即可。</p></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-body"><h4>使用规则</h4><p style="color:var(--red);font-weight:600;">Claude 系列仅限 <code>Claude Code</code> 官方客户端使用，不可用于第三方工具或商业行为，违规将封禁且不退款。</p></div></div>`;
+
+    cmd = `# macOS / Linux
+export ANTHROPIC_BASE_URL="${BASE}"
+export ANTHROPIC_API_KEY="${key}"
+export ANTHROPIC_MODEL="${claudeModel}"
+
+echo "Claude Code 环境变量已写入当前终端"
+echo "如需长期生效，请追加到 ~/.zshrc 或 ~/.bashrc"`;
+  } else {
+    const toml = `model = "${model||'gpt-5.4-codex'}"
+model_provider = "openai"
+
+[model_providers.openai]
+base_url = "${BASE}"
+api_key = "${key}"
+wire_api = "chat_completions"`;
+
+    stepsDiv.innerHTML = `
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4>安装 Codex CLI</h4><p><code>npm install -g @openai/codex</code></p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4>创建配置文件</h4><p>复制下方命令执行，或直接下载配置文件放到 <code>~/.codex/config.toml</code></p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4>重新登录 Codex</h4><p style="color:var(--red);font-weight:600;">重要：配置完成后，需要先退出 Codex（如果已登录），然后重新打开，选择「Use API Key」方式登录，填入你在中转站获取的 API Key 即可。</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><h4>开始使用</h4><p>终端运行 <code>codex</code> 即可开始使用</p></div></div>`;
+
+    cmd = `# macOS / Linux
+mkdir -p ~/.codex && cat > ~/.codex/config.toml << 'EOF'
+${toml}
+EOF
+echo "Codex 配置完成"`;
+  }
+
+  cmdBox.innerHTML = `<button class="copy-btn" onclick="copyCmd()">复制</button>${escHtml(cmd)}`;
+  cmdBox.setAttribute('data-cmd', cmd);
+  genResult.classList.add('show');
+  genResult.scrollIntoView({behavior:'smooth', block:'start'});
+  hideAlert('testAlert');
+}
+
+async function testConnection() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) {
+    showAlert('testAlert', 'warn', '请先输入 API Key');
+    document.getElementById('apiKey').focus();
+    return;
+  }
+  const testBtn = document.getElementById('testBtn');
+  testBtn.disabled = true;
+  showAlert('testAlert', 'loading', `<div class="spinner"></div> 正在测试连通性（使用 ${currentTool === 'claude' ? 'Claude 模型' : 'gpt-5.4 模型'}）...`);
+
+  try {
+    let resp;
+    let data;
+    if (currentTool === 'claude') {
+      resp = await fetch(BASE + '/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 8,
+          messages: [{role:'user', content:'hi'}]
+        })
+      });
+      data = await resp.json();
+      if (resp.ok && (data.content || data.id)) {
+        showAlert('testAlert', 'ok', 'Claude Code 连接成功！API Key 有效，可以正常使用。');
+      } else {
+        const errMsg = data.error?.message || data.message || JSON.stringify(data);
+        showAlert('testAlert', 'err', '连接失败：' + errMsg);
+      }
+    } else {
+      resp = await fetch(BASE + '/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key
+        },
+        body: JSON.stringify({
+          model: 'gpt-5.4',
+          messages: [{role:'user', content:'hi'}],
+          max_tokens: 5
+        })
+      });
+      data = await resp.json();
+      if (resp.ok && data.choices) {
+        showAlert('testAlert', 'ok', '连接成功！API Key 有效，可以正常使用。');
+      } else {
+        const errMsg = data.error?.message || data.message || JSON.stringify(data);
+        showAlert('testAlert', 'err', '连接失败：' + errMsg);
+      }
+    }
+  } catch(e) {
+    showAlert('testAlert', 'err', '网络错误：' + e.message);
+  }
+  testBtn.disabled = false;
+}
+
+function showAlert(id, type, html) {
+  const el = document.getElementById(id);
+  el.className = 'alert ' + type;
+  el.innerHTML = html;
+}
+function hideAlert(id) {
+  document.getElementById(id).className = 'alert';
+  document.getElementById(id).innerHTML = '';
+}
+
+function copyCmd() {
+  const cmd = document.getElementById('cmdBox').getAttribute('data-cmd');
+  navigator.clipboard.writeText(cmd).then(() => {
+    const btn = document.querySelector('#cmdBox .copy-btn');
+    btn.textContent = '已复制!';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  });
+}
+
+function downloadConfig() {
+  const key = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelSelect').value;
+  let content = '';
+  let filename = 'config.toml';
+  if (currentTool === 'claude') {
+    content = `export ANTHROPIC_BASE_URL="${BASE}"\nexport ANTHROPIC_API_KEY="${key}"\nexport ANTHROPIC_MODEL="${model||'claude-sonnet-4-6'}"\n`;
+    filename = 'claude-code-env.sh';
+  } else {
+    content = `model = "${model||'gpt-5.4-codex'}"\nmodel_provider = "openai"\n\n[model_providers.openai]\nbase_url = "${BASE}"\napi_key = "${key}"\nwire_api = "chat_completions"\n`;
+  }
+  const blob = new Blob([content], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+
+
+</body></html>

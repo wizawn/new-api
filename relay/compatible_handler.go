@@ -64,6 +64,24 @@ func TextHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *types
 	}
 
 	info.ShouldIncludeUsage = includeUsage
+	statusCodeMappingStr := c.GetString("status_code_mapping")
+
+	if info.ChannelType == constant.ChannelTypeChatMock {
+		applySystemPromptIfNeeded(c, info, request)
+		usage, chatmockErr := chatMockTextHelper(c, info, request)
+		if chatmockErr != nil {
+			service.ResetStatusCode(chatmockErr, statusCodeMappingStr)
+			return chatmockErr
+		}
+		if usage == nil {
+			usage = &dto.Usage{
+				PromptTokens: info.GetEstimatePromptTokens(),
+				TotalTokens:  info.GetEstimatePromptTokens(),
+			}
+		}
+		service.PostTextConsumeQuota(c, info, usage, nil)
+		return nil
+	}
 
 	adaptor := GetAdaptor(info.ApiType)
 	if adaptor == nil {
@@ -184,8 +202,6 @@ func TextHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *types
 	if err != nil {
 		return types.NewOpenAIError(err, types.ErrorCodeDoRequestFailed, http.StatusInternalServerError)
 	}
-
-	statusCodeMappingStr := c.GetString("status_code_mapping")
 
 	if resp != nil {
 		httpResp = resp.(*http.Response)

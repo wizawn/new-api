@@ -458,15 +458,15 @@ const MultiKeyManageModal = ({ visible, onCancel, channel, onRefresh }) => {
         <Space>
           <Text>{t('多密钥管理')}</Text>
           {channel?.name && (
-            <Tag size='small' shape='circle' color='white'>
+            <Tag size='small' shape='circle' color='grey'>
               {channel.name}
             </Tag>
           )}
-          <Tag size='small' shape='circle' color='white'>
+          <Tag size='small' shape='circle' color='grey'>
             {t('总密钥数')}: {total}
           </Tag>
           {channel?.channel_info?.multi_key_mode && (
-            <Tag size='small' shape='circle' color='white'>
+            <Tag size='small' shape='circle' color='grey'>
               {channel.channel_info.multi_key_mode === 'random'
                 ? t('随机模式')
                 : t('轮询模式')}

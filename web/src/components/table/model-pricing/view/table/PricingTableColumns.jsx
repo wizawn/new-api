@@ -57,9 +57,9 @@ const renderVendor = (vendorName, vendorIcon, t) => {
   if (!vendorName) return '-';
   return (
     <Tag
-      color='white'
+      color='grey'
       shape='circle'
-      prefixIcon={getLobeHubIcon(vendorIcon || 'Layers', 14)}
+      prefixIcon={getLobeHubIcon(vendorIcon || 'Layers', 14, vendorName)}
     >
       {vendorName}
     </Tag>
@@ -213,14 +213,14 @@ export const getPricingTableColumns = ({
 
       return (
         <div className='space-y-1'>
-          <div className='text-gray-700'>
+          <div className='text-[var(--text-primary)]'>
             {t('模型倍率')}：{record.quota_type === 0 ? text : t('无')}
           </div>
-          <div className='text-gray-700'>
+          <div className='text-[var(--text-primary)]'>
             {t('补全倍率')}：
             {record.quota_type === 0 ? completionRatio : t('无')}
           </div>
-          <div className='text-gray-700'>
+          <div className='text-[var(--text-primary)]'>
             {t('分组倍率')}：{priceData?.usedGroupRatio ?? '-'}
           </div>
         </div>
@@ -239,7 +239,7 @@ export const getPricingTableColumns = ({
       return (
         <div className='space-y-1'>
           {priceItems.map((item) => (
-            <div key={item.key} className='text-gray-700'>
+            <div key={item.key} className='text-[var(--text-primary)]'>
               {item.label} {item.value}
               {item.suffix}
             </div>

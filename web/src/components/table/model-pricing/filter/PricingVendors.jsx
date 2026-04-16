@@ -93,7 +93,7 @@ const PricingVendors = ({
       result.push({
         value: vendor,
         label: vendor,
-        icon: icon ? getLobeHubIcon(icon, 16) : null,
+        icon: icon ? getLobeHubIcon(icon, 16, vendor) : null,
         tagCount: count,
       });
     });

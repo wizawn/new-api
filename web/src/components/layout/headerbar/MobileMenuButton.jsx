@@ -22,14 +22,13 @@ import { Button } from '@douyinfe/semi-ui';
 import { IconClose, IconMenu } from '@douyinfe/semi-icons';
 
 const MobileMenuButton = ({
-  isConsoleRoute,
   isMobile,
   drawerOpen,
   collapsed,
   onToggle,
   t,
 }) => {
-  if (!isConsoleRoute || !isMobile) {
+  if (!isMobile) {
     return null;
   }
 
@@ -48,7 +47,7 @@ const MobileMenuButton = ({
       onClick={onToggle}
       theme='borderless'
       type='tertiary'
-      className='!p-2 !text-current focus:!bg-semi-color-fill-1 dark:focus:!bg-gray-700'
+      className='!p-2 !text-current focus:!bg-semi-color-fill-1 dark:focus:!bg-gray-700 md:hidden'
     />
   );
 };

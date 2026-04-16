@@ -52,6 +52,17 @@ import SubscriptionPlansCard from './SubscriptionPlansCard';
 
 const { Text } = Typography;
 
+const coverMainTextStyle = {
+  color: '#ffffff',
+  textShadow: '0 1px 3px rgba(15, 23, 42, 0.65)',
+};
+
+const coverSubTextStyle = {
+  color: 'rgba(255, 255, 255, 0.92)',
+  fontSize: '12px',
+  textShadow: '0 1px 2px rgba(15, 23, 42, 0.55)',
+};
+
 const RechargeCard = ({
   t,
   enableOnlineTopUp,
@@ -125,10 +136,11 @@ const RechargeCard = ({
         className='!rounded-xl w-full'
         cover={
           <div
-            className='relative h-30'
+            className='relative min-h-[132px]'
             style={{
-              '--palette-primary-darkerChannel': '37 99 235',
-              backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 80%), rgba(var(--palette-primary-darkerChannel) / 80%)), url('/cover-4.webp')`,
+              '--palette-primary-darkerChannel': '30 64 175',
+              backgroundColor: '#1e40af',
+              backgroundImage: `linear-gradient(0deg, rgba(var(--palette-primary-darkerChannel) / 86%), rgba(var(--palette-primary-darkerChannel) / 86%)), url('/cover-4.webp')`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
@@ -136,7 +148,7 @@ const RechargeCard = ({
           >
             <div className='relative z-10 h-full flex flex-col justify-between p-4'>
               <div className='flex justify-between items-center'>
-                <Text strong style={{ color: 'white', fontSize: '16px' }}>
+                <Text strong style={{ ...coverMainTextStyle, fontSize: '16px' }}>
                   {t('账户统计')}
                 </Text>
               </div>
@@ -145,24 +157,16 @@ const RechargeCard = ({
               <div className='grid grid-cols-3 gap-6 mt-4'>
                 {/* 当前余额 */}
                 <div className='text-center'>
-                  <div
-                    className='text-base sm:text-2xl font-bold mb-2'
-                    style={{ color: 'white' }}
-                  >
+                  <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                     {renderQuota(userState?.user?.quota)}
                   </div>
                   <div className='flex items-center justify-center text-sm'>
                     <Wallet
                       size={14}
                       className='mr-1'
-                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                      style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                     />
-                    <Text
-                      style={{
-                        color: 'rgba(255,255,255,0.8)',
-                        fontSize: '12px',
-                      }}
-                    >
+                    <Text style={coverSubTextStyle}>
                       {t('当前余额')}
                     </Text>
                   </div>
@@ -170,24 +174,16 @@ const RechargeCard = ({
 
                 {/* 历史消耗 */}
                 <div className='text-center'>
-                  <div
-                    className='text-base sm:text-2xl font-bold mb-2'
-                    style={{ color: 'white' }}
-                  >
+                  <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                     {renderQuota(userState?.user?.used_quota)}
                   </div>
                   <div className='flex items-center justify-center text-sm'>
                     <TrendingUp
                       size={14}
                       className='mr-1'
-                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                      style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                     />
-                    <Text
-                      style={{
-                        color: 'rgba(255,255,255,0.8)',
-                        fontSize: '12px',
-                      }}
-                    >
+                    <Text style={coverSubTextStyle}>
                       {t('历史消耗')}
                     </Text>
                   </div>
@@ -195,24 +191,16 @@ const RechargeCard = ({
 
                 {/* 请求次数 */}
                 <div className='text-center'>
-                  <div
-                    className='text-base sm:text-2xl font-bold mb-2'
-                    style={{ color: 'white' }}
-                  >
+                  <div className='text-base sm:text-2xl font-bold mb-2' style={coverMainTextStyle}>
                     {userState?.user?.request_count || 0}
                   </div>
                   <div className='flex items-center justify-center text-sm'>
                     <BarChart2
                       size={14}
                       className='mr-1'
-                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                      style={{ color: 'rgba(255, 255, 255, 0.92)' }}
                     />
-                    <Text
-                      style={{
-                        color: 'rgba(255,255,255,0.8)',
-                        fontSize: '12px',
-                      }}
-                    >
+                    <Text style={coverSubTextStyle}>
                       {t('请求次数')}
                     </Text>
                   </div>

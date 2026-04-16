@@ -22,7 +22,7 @@ import { Banner } from '@douyinfe/semi-ui';
 import CardPro from '../../common/ui/CardPro';
 import SubscriptionsTable from './SubscriptionsTable';
 import SubscriptionsActions from './SubscriptionsActions';
-import SubscriptionsDescription from './SubscriptionsDescription';
+import SubscriptionsOverview from './SubscriptionsOverview';
 import AddEditSubscriptionModal from './modals/AddEditSubscriptionModal';
 import { useSubscriptionsData } from '../../../hooks/subscriptions/useSubscriptionsData';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
@@ -61,9 +61,16 @@ const SubscriptionsPage = () => {
       <CardPro
         type='type1'
         descriptionArea={
-          <SubscriptionsDescription
+          <SubscriptionsOverview
             compactMode={compactMode}
             setCompactMode={setCompactMode}
+            allPlans={subscriptionsData.allPlans}
+            filteredPlans={subscriptionsData.filteredPlans}
+            plans={subscriptionsData.plans}
+            statusFilter={subscriptionsData.statusFilter}
+            onStatusFilterChange={subscriptionsData.handleStatusFilterChange}
+            onResetStatusFilter={subscriptionsData.resetStatusFilter}
+            enableEpay={enableEpay}
             t={t}
           />
         }
@@ -71,7 +78,7 @@ const SubscriptionsPage = () => {
           <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full'>
             {/* Mobile: actions first; Desktop: actions left */}
             <div className='order-1 md:order-0 w-full md:w-auto'>
-              <SubscriptionsActions openCreate={openCreate} t={t} />
+              <SubscriptionsActions openCreate={openCreate} refresh={refresh} t={t} />
             </div>
             <Banner
               type='info'

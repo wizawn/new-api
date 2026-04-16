@@ -47,6 +47,8 @@ const routerMap = {
   task: '/console/task',
   models: '/console/models',
   deployment: '/console/deployment',
+  chatmock: '/console/chatmock',
+  teamAutomation: '/console/team-automation',
   playground: '/console/playground',
   personal: '/console/personal',
 };
@@ -169,6 +171,18 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('模型部署'),
         itemKey: 'deployment',
         to: '/deployment',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('账号池管理'),
+        itemKey: 'chatmock',
+        to: '/console/chatmock',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('Team 自动化'),
+        itemKey: 'teamAutomation',
+        to: '/console/team-automation',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

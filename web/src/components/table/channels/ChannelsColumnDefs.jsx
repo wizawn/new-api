@@ -532,7 +532,7 @@ export const getChannelsColumns = ({
             <div>
               <Space spacing={1}>
                 <Tooltip content={t('已用额度')}>
-                  <Tag color='white' type='ghost' shape='circle'>
+                  <Tag color='grey' type='ghost' shape='circle'>
                     {renderQuota(record.used_quota)}
                   </Tag>
                 </Tooltip>
@@ -564,7 +564,7 @@ export const getChannelsColumns = ({
         } else {
           return (
             <Tooltip content={t('已用额度')}>
-              <Tag color='white' type='ghost' shape='circle'>
+              <Tag color='grey' type='ghost' shape='circle'>
                 {renderQuota(record.used_quota)}
               </Tag>
             </Tooltip>

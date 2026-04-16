@@ -164,6 +164,37 @@ func InitOptionMap() {
 	common.OptionMap["AutomaticDisableStatusCodes"] = operation_setting.AutomaticDisableStatusCodesToString()
 	common.OptionMap["AutomaticRetryStatusCodes"] = operation_setting.AutomaticRetryStatusCodesToString()
 	common.OptionMap["ExposeRatioEnabled"] = strconv.FormatBool(ratio_setting.IsExposeRatioEnabled())
+	common.OptionMap["TeamAutomationEnabled"] = "false"
+	common.OptionMap["TeamAutomationMode"] = "remote_proxy"
+	common.OptionMap["TeamAutomationBaseURL"] = ""
+	common.OptionMap["TeamAutomationUsername"] = ""
+	common.OptionMap["TeamAutomationPasswordSecret"] = ""
+	common.OptionMap["TeamAutomationTimeoutSeconds"] = "30"
+	common.OptionMap["TeamAutomationVerifySSLEnabled"] = "true"
+
+	common.OptionMap["AutomationMode"] = "local"
+	common.OptionMap["AutomationWorkerBaseURL"] = ""
+	common.OptionMap["AutomationWorkerUsername"] = ""
+	common.OptionMap["AutomationWorkerPasswordSecret"] = ""
+	common.OptionMap["AutomationWorkerTimeoutSeconds"] = "30"
+	common.OptionMap["AutomationWorkerVerifySSLEnabled"] = "true"
+	common.OptionMap["AutomationArtifactRoot"] = "/data/automation-artifacts"
+	common.OptionMap["AutomationPlaywrightHeadless"] = "true"
+	common.OptionMap["AutomationPlaywrightBrowser"] = "chromium"
+	common.OptionMap["AutomationRegisterEntryURL"] = "https://chatgpt.com"
+	common.OptionMap["AutomationRegisterProxyPool"] = ""
+	common.OptionMap["AutomationRegisterProxyGateway"] = ""
+	common.OptionMap["AutomationRegisterUserAgent"] = ""
+	common.OptionMap["AutomationCloudflareApiToken"] = ""
+	common.OptionMap["AutomationCloudflareApiEmail"] = ""
+	common.OptionMap["AutomationCloudflareZoneID"] = ""
+	common.OptionMap["AutomationCloudflareDomain"] = ""
+	common.OptionMap["AutomationTempmailBaseURL"] = ""
+	common.OptionMap["AutomationTempmailAdminAuth"] = ""
+	common.OptionMap["AutomationTempmailDomain"] = ""
+	common.OptionMap["AutomationDefaultMailboxID"] = "0"
+	common.OptionMap["AutomationCPAEndpoint"] = ""
+	common.OptionMap["AutomationCPAToken"] = ""
 
 	// 自动添加所有注册的模型配置
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()

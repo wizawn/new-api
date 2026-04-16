@@ -387,7 +387,7 @@ const UserBindingManagementModal = ({
                         <div className='min-w-0 flex-1'>
                           <div className='font-medium text-gray-900 flex items-center gap-2'>
                             <span>{item.name}</span>
-                            <Tag size='small' color='white'>
+                            <Tag size='small' color='grey'>
                               {item.type === 'builtin'
                                 ? t('内置')
                                 : t('自定义')}

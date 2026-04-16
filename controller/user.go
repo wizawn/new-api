@@ -227,8 +227,10 @@ func Register(c *gin.Context) {
 }
 
 func GetAllUsers(c *gin.Context) {
+	statusFilter := parseUserStatusFilter(c.Query("status"))
+	roleFilter := parseUserRoleFilter(c.Query("role"))
 	pageInfo := common.GetPageQuery(c)
-	users, total, err := model.GetAllUsers(pageInfo)
+	users, total, err := model.GetAllUsers(pageInfo, statusFilter, roleFilter)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -244,8 +246,10 @@ func GetAllUsers(c *gin.Context) {
 func SearchUsers(c *gin.Context) {
 	keyword := c.Query("keyword")
 	group := c.Query("group")
+	statusFilter := parseUserStatusFilter(c.Query("status"))
+	roleFilter := parseUserRoleFilter(c.Query("role"))
 	pageInfo := common.GetPageQuery(c)
-	users, total, err := model.SearchUsers(keyword, group, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	users, total, err := model.SearchUsers(keyword, group, statusFilter, roleFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -255,6 +259,24 @@ func SearchUsers(c *gin.Context) {
 	pageInfo.SetItems(users)
 	common.ApiSuccess(c, pageInfo)
 	return
+}
+
+func parseUserStatusFilter(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "enabled", "disabled", "deleted":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return "all"
+	}
+}
+
+func parseUserRoleFilter(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "common", "admin", "root":
+		return strings.ToLower(strings.TrimSpace(raw))
+	default:
+		return "all"
+	}
 }
 
 func GetUser(c *gin.Context) {

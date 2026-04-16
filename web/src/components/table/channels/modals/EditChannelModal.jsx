@@ -155,6 +155,8 @@ function type2secretPrompt(type) {
       return '按照如下格式输入: AccessKey|SecretAccessKey';
     case 57:
       return '请输入 JSON 格式的 OAuth 凭据（必须包含 access_token 和 account_id）';
+    case 58:
+      return '可留空，将自动使用默认值 chatmock_pool';
     default:
       return '请输入渠道对应的鉴权密钥';
   }
@@ -1565,6 +1567,18 @@ const EditChannelModal = (props) => {
       }
     }
 
+    if (localInputs.type === 58) {
+      if (batch) {
+        showInfo(t('ChatMock 号池渠道不支持批量创建'));
+        return;
+      }
+      if (!localInputs.key || localInputs.key.trim() === '') {
+        localInputs.key = 'chatmock_pool';
+      }
+      // ChatMock 账号池由系统内置路由，不需要单独填写 Base URL。
+      localInputs.base_url = '';
+    }
+
     if (localInputs.type === 41) {
       const keyType = localInputs.vertex_key_type || 'json';
       if (keyType === 'api_key') {
@@ -1954,7 +1968,10 @@ const EditChannelModal = (props) => {
     }
   };
 
-  const batchAllowed = (!isEdit || isMultiKeyChannel) && inputs.type !== 57;
+  const batchAllowed =
+    (!isEdit || isMultiKeyChannel) &&
+    inputs.type !== 57 &&
+    inputs.type !== 58;
   const batchExtra = batchAllowed ? (
     <Space>
       {!isEdit && (
@@ -2610,6 +2627,17 @@ const EditChannelModal = (props) => {
                         className='mb-4 rounded-xl'
                         description={t(
                           '免责声明：仅限个人使用，请勿分发或共享任何凭证。该渠道存在前置条件与使用门槛，请在充分了解流程与风险后使用，并遵守 OpenAI 的相关条款与政策。相关凭证与配置仅限接入 Codex CLI 使用，不适用于其他客户端、平台或渠道。',
+                        )}
+                      />
+                    )}
+
+                    {inputs.type === 58 && (
+                      <Banner
+                        type='info'
+                        closeIcon={null}
+                        className='mb-4 rounded-xl'
+                        description={t(
+                          '该渠道会把 /v1/chat/completions 请求转发到内置 ChatMock 账号池调度，不需要额外填写上游 API 地址。',
                         )}
                       />
                     )}
@@ -3334,6 +3362,7 @@ const EditChannelModal = (props) => {
                         inputs.type !== 8 &&
                         inputs.type !== 22 &&
                         inputs.type !== 36 &&
+                        inputs.type !== 58 &&
                         (inputs.type !== 45 || doubaoApiEditUnlocked) && (
                           <div>
                             <Form.Input

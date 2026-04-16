@@ -280,6 +280,17 @@ func migrateDB() error {
 		&SubscriptionPreConsumeRecord{},
 		&CustomOAuthProvider{},
 		&UserOAuthBinding{},
+		&ChatMockAccount{},
+		&ChatMockPoolConfig{},
+		&ChatMockMailbox{},
+		&ChatMockMailEvent{},
+		&ChatMockRouteLog{},
+		&ChatMockAccountSnapshot{},
+		&AutomationAccount{},
+		&AutomationTeam{},
+		&AutomationExecution{},
+		&AutomationExecutionLog{},
+		&AutomationArtifact{},
 	)
 	if err != nil {
 		return err
@@ -328,6 +339,17 @@ func migrateDBFast() error {
 		{&SubscriptionPreConsumeRecord{}, "SubscriptionPreConsumeRecord"},
 		{&CustomOAuthProvider{}, "CustomOAuthProvider"},
 		{&UserOAuthBinding{}, "UserOAuthBinding"},
+		{&ChatMockAccount{}, "ChatMockAccount"},
+		{&ChatMockPoolConfig{}, "ChatMockPoolConfig"},
+		{&ChatMockMailbox{}, "ChatMockMailbox"},
+		{&ChatMockMailEvent{}, "ChatMockMailEvent"},
+		{&ChatMockRouteLog{}, "ChatMockRouteLog"},
+		{&ChatMockAccountSnapshot{}, "ChatMockAccountSnapshot"},
+		{&AutomationAccount{}, "AutomationAccount"},
+		{&AutomationTeam{}, "AutomationTeam"},
+		{&AutomationExecution{}, "AutomationExecution"},
+		{&AutomationExecutionLog{}, "AutomationExecutionLog"},
+		{&AutomationArtifact{}, "AutomationArtifact"},
 	}
 	// 动态计算migration数量，确保errChan缓冲区足够大
 	errChan := make(chan error, len(migrations))

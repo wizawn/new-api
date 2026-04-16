@@ -65,7 +65,7 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
   const { mainNavLinks } = useNavigation(t, docsLink, headerNavModules);
 
   return (
-    <header className='text-semi-color-text-0 sticky top-0 z-50 transition-colors duration-300 bg-white/75 dark:bg-zinc-900/75 backdrop-blur-lg'>
+    <header className='sticky top-0 z-50 border-b border-slate-200 bg-white/96 text-semi-color-text-0 shadow-[0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-colors duration-300'>
       <NoticeModal
         visible={noticeVisible}
         onClose={handleNoticeClose}
@@ -74,11 +74,10 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
         unreadKeys={getUnreadKeys()}
       />
 
-      <div className='w-full px-2'>
-        <div className='flex items-center justify-between h-16'>
+      <div className='w-full px-3 sm:px-4 lg:px-6'>
+        <div className='flex min-h-16 items-center justify-between py-2'>
           <div className='flex items-center'>
             <MobileMenuButton
-              isConsoleRoute={isConsoleRoute}
               isMobile={isMobile}
               drawerOpen={drawerOpen}
               collapsed={collapsed}
@@ -105,6 +104,13 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
             isLoading={isLoading}
             userState={userState}
             pricingRequireAuth={pricingRequireAuth}
+            drawerOpen={drawerOpen}
+            isConsoleRoute={isConsoleRoute}
+            onNavigate={() => {
+              if (isMobile && !isConsoleRoute && drawerOpen) {
+                handleMobileMenuToggle();
+              }
+            }}
           />
 
           <ActionButtons
@@ -124,6 +130,23 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
             t={t}
           />
         </div>
+
+        {isMobile && !isConsoleRoute && (
+          <Navigation
+            mainNavLinks={mainNavLinks}
+            isMobile={isMobile}
+            isLoading={isLoading}
+            userState={userState}
+            pricingRequireAuth={pricingRequireAuth}
+            drawerOpen={drawerOpen}
+            isConsoleRoute={isConsoleRoute}
+            onNavigate={() => {
+              if (drawerOpen) {
+                handleMobileMenuToggle();
+              }
+            }}
+          />
+        )}
       </div>
     </header>
   );

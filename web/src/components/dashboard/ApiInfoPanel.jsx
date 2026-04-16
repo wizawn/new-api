@@ -66,7 +66,7 @@ const ApiInfoPanel = ({
                       <Tag
                         prefixIcon={<Gauge size={12} />}
                         size='small'
-                        color='white'
+                        color='grey'
                         shape='circle'
                         onClick={() => handleSpeedTest(api.url)}
                         className='cursor-pointer hover:opacity-80 text-xs'
@@ -76,7 +76,7 @@ const ApiInfoPanel = ({
                       <Tag
                         prefixIcon={<ExternalLink size={12} />}
                         size='small'
-                        color='white'
+                        color='grey'
                         shape='circle'
                         onClick={() =>
                           window.open(api.url, '_blank', 'noopener,noreferrer')

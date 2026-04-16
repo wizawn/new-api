@@ -126,7 +126,7 @@ const PrefillGroupManagement = ({ visible, onClose }) => {
       render: (text, record) => (
         <Space>
           <Text strong>{text}</Text>
-          <Tag color='white' shape='circle' size='small'>
+          <Tag color='grey' shape='circle' size='small'>
             {typeOptions.find((opt) => opt.value === record.type)?.label ||
               record.type}
           </Tag>

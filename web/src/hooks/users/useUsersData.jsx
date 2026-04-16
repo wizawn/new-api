@@ -26,6 +26,20 @@ import { useTableCompactMode } from '../common/useTableCompactMode';
 export const useUsersData = () => {
   const { t } = useTranslation();
   const [compactMode, setCompactMode] = useTableCompactMode('users');
+  const normalizeStatusFilter = (value) => {
+    const next = String(value || 'all').trim().toLowerCase();
+    if (['enabled', 'disabled', 'deleted', 'all'].includes(next)) {
+      return next;
+    }
+    return 'all';
+  };
+  const normalizeRoleFilter = (value) => {
+    const next = String(value || 'all').trim().toLowerCase();
+    if (['common', 'admin', 'root', 'all'].includes(next)) {
+      return next;
+    }
+    return 'all';
+  };
 
   // State management
   const [users, setUsers] = useState([]);
@@ -35,6 +49,12 @@ export const useUsersData = () => {
   const [searching, setSearching] = useState(false);
   const [groupOptions, setGroupOptions] = useState([]);
   const [userCount, setUserCount] = useState(0);
+  const [statusFilter, setStatusFilter] = useState(
+    normalizeStatusFilter(localStorage.getItem('users-status-filter') || 'all'),
+  );
+  const [roleFilter, setRoleFilter] = useState(
+    normalizeRoleFilter(localStorage.getItem('users-role-filter') || 'all'),
+  );
 
   // Modal states
   const [showAddUser, setShowAddUser] = useState(false);
@@ -69,10 +89,33 @@ export const useUsersData = () => {
     setUsers(users);
   };
 
+  const buildFilterQuery = (
+    status = statusFilter,
+    role = roleFilter,
+  ) => {
+    const params = [];
+    const normalizedStatus = normalizeStatusFilter(status);
+    const normalizedRole = normalizeRoleFilter(role);
+    if (normalizedStatus !== 'all') {
+      params.push(`status=${encodeURIComponent(normalizedStatus)}`);
+    }
+    if (normalizedRole !== 'all') {
+      params.push(`role=${encodeURIComponent(normalizedRole)}`);
+    }
+    return params.length > 0 ? `&${params.join('&')}` : '';
+  };
+
   // Load users data
-  const loadUsers = async (startIdx, pageSize) => {
+  const loadUsers = async (
+    startIdx = 1,
+    pageSizeValue = pageSize,
+    status = statusFilter,
+    role = roleFilter,
+  ) => {
     setLoading(true);
-    const res = await API.get(`/api/user/?p=${startIdx}&page_size=${pageSize}`);
+    const res = await API.get(
+      `/api/user/?p=${startIdx}&page_size=${pageSizeValue}${buildFilterQuery(status, role)}`,
+    );
     const { success, message, data } = res.data;
     if (success) {
       const newPageData = data.items;
@@ -88,9 +131,11 @@ export const useUsersData = () => {
   // Search users with keyword and group
   const searchUsers = async (
     startIdx,
-    pageSize,
+    pageSizeValue,
     searchKeyword = null,
     searchGroup = null,
+    status = statusFilter,
+    role = roleFilter,
   ) => {
     // If no parameters passed, get values from form
     if (searchKeyword === null || searchGroup === null) {
@@ -101,12 +146,12 @@ export const useUsersData = () => {
 
     if (searchKeyword === '' && searchGroup === '') {
       // If keyword is blank, load files instead
-      await loadUsers(startIdx, pageSize);
+      await loadUsers(startIdx, pageSizeValue, status, role);
       return;
     }
     setSearching(true);
     const res = await API.get(
-      `/api/user/search?keyword=${searchKeyword}&group=${searchGroup}&p=${startIdx}&page_size=${pageSize}`,
+      `/api/user/search?keyword=${encodeURIComponent(searchKeyword)}&group=${encodeURIComponent(searchGroup)}&p=${startIdx}&page_size=${pageSizeValue}${buildFilterQuery(status, role)}`,
     );
     const { success, message, data } = res.data;
     if (success) {
@@ -193,9 +238,16 @@ export const useUsersData = () => {
     setActivePage(page);
     const { searchKeyword, searchGroup } = getFormValues();
     if (searchKeyword === '' && searchGroup === '') {
-      loadUsers(page, pageSize).then();
+      loadUsers(page, pageSize, statusFilter, roleFilter).then();
     } else {
-      searchUsers(page, pageSize, searchKeyword, searchGroup).then();
+      searchUsers(
+        page,
+        pageSize,
+        searchKeyword,
+        searchGroup,
+        statusFilter,
+        roleFilter,
+      ).then();
     }
   };
 
@@ -204,11 +256,16 @@ export const useUsersData = () => {
     localStorage.setItem('page-size', size + '');
     setPageSize(size);
     setActivePage(1);
-    loadUsers(activePage, size)
-      .then()
-      .catch((reason) => {
-        showError(reason);
-      });
+    const { searchKeyword, searchGroup } = getFormValues();
+    try {
+      if (searchKeyword === '' && searchGroup === '') {
+        await loadUsers(1, size, statusFilter, roleFilter);
+      } else {
+        await searchUsers(1, size, searchKeyword, searchGroup, statusFilter, roleFilter);
+      }
+    } catch (reason) {
+      showError(reason);
+    }
   };
 
   // Handle table row styling for disabled/deleted users
@@ -228,10 +285,53 @@ export const useUsersData = () => {
   const refresh = async (page = activePage) => {
     const { searchKeyword, searchGroup } = getFormValues();
     if (searchKeyword === '' && searchGroup === '') {
-      await loadUsers(page, pageSize);
+      await loadUsers(page, pageSize, statusFilter, roleFilter);
     } else {
-      await searchUsers(page, pageSize, searchKeyword, searchGroup);
+      await searchUsers(
+        page,
+        pageSize,
+        searchKeyword,
+        searchGroup,
+        statusFilter,
+        roleFilter,
+      );
     }
+  };
+
+  const handleStatusFilterChange = async (value) => {
+    const nextStatus = normalizeStatusFilter(value);
+    localStorage.setItem('users-status-filter', nextStatus);
+    setStatusFilter(nextStatus);
+    setActivePage(1);
+    const { searchKeyword, searchGroup } = getFormValues();
+    if (searchKeyword === '' && searchGroup === '') {
+      await loadUsers(1, pageSize, nextStatus, roleFilter);
+    } else {
+      await searchUsers(1, pageSize, searchKeyword, searchGroup, nextStatus, roleFilter);
+    }
+  };
+
+  const handleRoleFilterChange = async (value) => {
+    const nextRole = normalizeRoleFilter(value);
+    localStorage.setItem('users-role-filter', nextRole);
+    setRoleFilter(nextRole);
+    setActivePage(1);
+    const { searchKeyword, searchGroup } = getFormValues();
+    if (searchKeyword === '' && searchGroup === '') {
+      await loadUsers(1, pageSize, statusFilter, nextRole);
+    } else {
+      await searchUsers(1, pageSize, searchKeyword, searchGroup, statusFilter, nextRole);
+    }
+  };
+
+  const resetAllFilters = async () => {
+    formApi?.reset?.();
+    localStorage.setItem('users-status-filter', 'all');
+    localStorage.setItem('users-role-filter', 'all');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    setActivePage(1);
+    await loadUsers(1, pageSize, 'all', 'all');
   };
 
   // Fetch groups data
@@ -266,7 +366,7 @@ export const useUsersData = () => {
 
   // Initialize data on component mount
   useEffect(() => {
-    loadUsers(0, pageSize)
+    loadUsers(1, pageSize, statusFilter, roleFilter)
       .then()
       .catch((reason) => {
         showError(reason);
@@ -283,6 +383,8 @@ export const useUsersData = () => {
     userCount,
     searching,
     groupOptions,
+    statusFilter,
+    roleFilter,
 
     // Modal state
     showAddUser,
@@ -307,10 +409,13 @@ export const useUsersData = () => {
     manageUser,
     resetUserPasskey,
     resetUserTwoFA,
+    handleStatusFilterChange,
+    handleRoleFilterChange,
     handlePageChange,
     handlePageSizeChange,
     handleRow,
     refresh,
+    resetAllFilters,
     closeAddUser,
     closeEditUser,
     getFormValues,

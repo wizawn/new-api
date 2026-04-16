@@ -18,13 +18,15 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useRef } from 'react';
-import { Form, Button } from '@douyinfe/semi-ui';
+import { Form, Button, Select } from '@douyinfe/semi-ui';
 import { IconSearch } from '@douyinfe/semi-icons';
 
 const TokensFilters = ({
   formInitValues,
   setFormApi,
   searchTokens,
+  statusFilter,
+  onStatusFilterChange,
   loading,
   searching,
   t,
@@ -75,6 +77,21 @@ const TokensFilters = ({
             showClear
             pure
             size='small'
+          />
+        </div>
+
+        <div className='w-full md:w-40'>
+          <Select
+            size='small'
+            value={statusFilter}
+            onChange={onStatusFilterChange}
+            optionList={[
+              { label: t('全部状态'), value: 'all' },
+              { label: t('已启用'), value: 'enabled' },
+              { label: t('已禁用'), value: 'disabled' },
+              { label: t('已过期'), value: 'expired' },
+              { label: t('已耗尽'), value: 'exhausted' },
+            ]}
           />
         </div>
 

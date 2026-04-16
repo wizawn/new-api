@@ -82,7 +82,7 @@ const StatsCards = ({
                   </div>
                   {item.title === t('当前余额') ? (
                     <Tag
-                      color='white'
+                      color='grey'
                       shape='circle'
                       size='large'
                       onClick={(e) => {

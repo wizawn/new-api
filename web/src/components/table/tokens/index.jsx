@@ -366,6 +366,8 @@ function TokensPage() {
     searchTokens,
     loading,
     searching,
+    statusFilter,
+    handleStatusFilterChange,
 
     // Description state
     compactMode,
@@ -397,6 +399,13 @@ function TokensPage() {
           <TokensDescription
             compactMode={compactMode}
             setCompactMode={setCompactMode}
+            tokens={tokensData.tokens}
+            tokenCount={tokensData.tokenCount}
+            selectedKeys={tokensData.selectedKeys}
+            statusFilter={statusFilter}
+            onStatusFilterChange={handleStatusFilterChange}
+            getFormValues={tokensData.getFormValues}
+            setSelectedKeys={tokensData.setSelectedKeys}
             t={t}
           />
         }
@@ -408,6 +417,7 @@ function TokensPage() {
               setShowEdit={setShowEdit}
               batchCopyTokens={batchCopyTokens}
               batchDeleteTokens={batchDeleteTokens}
+              refresh={refresh}
               t={t}
             />
 
@@ -416,6 +426,8 @@ function TokensPage() {
                 formInitValues={formInitValues}
                 setFormApi={setFormApi}
                 searchTokens={searchTokens}
+                statusFilter={statusFilter}
+                onStatusFilterChange={handleStatusFilterChange}
                 loading={loading}
                 searching={searching}
                 t={t}

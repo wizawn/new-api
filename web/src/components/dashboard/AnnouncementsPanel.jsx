@@ -43,7 +43,7 @@ const AnnouncementsPanel = ({
           <div className='flex items-center gap-2'>
             <Bell size={16} />
             {t('系统公告')}
-            <Tag color='white' shape='circle'>
+            <Tag color='grey' shape='circle'>
               {t('显示最新20条')}
             </Tag>
           </div>

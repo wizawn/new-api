@@ -33,10 +33,41 @@ export const API_ENDPOINTS = [
   '/v1/rerank',
   '/v1/images/generations',
   '/v1/images/edits',
-  '/v1/images/variations',
   '/v1/audio/speech',
   '/v1/audio/transcriptions',
   '/v1/audio/translations',
+];
+
+export const API_ENDPOINT_GROUPS = [
+  {
+    key: 'chat',
+    title: 'Chat & Completions',
+    endpoints: [
+      '/v1/chat/completions',
+      '/v1/responses',
+      '/v1/responses/compact',
+      '/v1/messages',
+    ],
+  },
+  {
+    key: 'embeddings',
+    title: 'Embeddings & Rerank',
+    endpoints: ['/v1/embeddings', '/v1/rerank'],
+  },
+  {
+    key: 'images',
+    title: 'Image Generation',
+    endpoints: ['/v1/images/generations', '/v1/images/edits'],
+  },
+  {
+    key: 'audio',
+    title: 'Audio Processing',
+    endpoints: [
+      '/v1/audio/speech',
+      '/v1/audio/transcriptions',
+      '/v1/audio/translations',
+    ],
+  },
 ];
 
 export const TASK_ACTION_GENERATE = 'generate';

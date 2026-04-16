@@ -57,6 +57,10 @@ func ShouldDisableChannel(channelType int, err *types.NewAPIError) bool {
 	if types.IsSkipRetryError(err) {
 		return false
 	}
+	if isDistributorModelUnavailableError(err) {
+		// distributor 无可用模型属于路由配置问题，不应自动封禁被测渠道。
+		return false
+	}
 	if operation_setting.ShouldDisableByStatusCode(err.StatusCode) {
 		return true
 	}
@@ -99,6 +103,23 @@ func ShouldDisableChannel(channelType int, err *types.NewAPIError) bool {
 	lowerMessage := strings.ToLower(err.Error())
 	search, _ := AcSearch(lowerMessage, operation_setting.AutomaticDisableKeywords, true)
 	return search
+}
+
+func isDistributorModelUnavailableError(err *types.NewAPIError) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(strings.TrimSpace(err.Error()))
+	if strings.Contains(msg, "no available channel for model") &&
+		strings.Contains(msg, "distributor") {
+		return true
+	}
+	if strings.Contains(msg, "模型") &&
+		strings.Contains(msg, "无可用渠道") &&
+		strings.Contains(msg, "distributor") {
+		return true
+	}
+	return false
 }
 
 func ShouldEnableChannel(newAPIError *types.NewAPIError, status int) bool {

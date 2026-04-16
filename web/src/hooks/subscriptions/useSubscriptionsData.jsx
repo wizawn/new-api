@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API, showError, showSuccess } from '../../helpers';
 import { useTableCompactMode } from '../common/useTableCompactMode';
@@ -25,10 +25,22 @@ import { useTableCompactMode } from '../common/useTableCompactMode';
 export const useSubscriptionsData = () => {
   const { t } = useTranslation();
   const [compactMode, setCompactMode] = useTableCompactMode('subscriptions');
+  const normalizeStatusFilter = (value) => {
+    const next = String(value || 'all').trim().toLowerCase();
+    if (['enabled', 'disabled', 'all'].includes(next)) {
+      return next;
+    }
+    return 'all';
+  };
 
   // State management
   const [allPlans, setAllPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState(
+    normalizeStatusFilter(
+      localStorage.getItem('subscriptions-status-filter') || 'all',
+    ),
+  );
 
   // Pagination (client-side for now)
   const [activePage, setActivePage] = useState(1);
@@ -72,6 +84,19 @@ export const useSubscriptionsData = () => {
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
+    setActivePage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    const next = normalizeStatusFilter(value);
+    localStorage.setItem('subscriptions-status-filter', next);
+    setStatusFilter(next);
+    setActivePage(1);
+  };
+
+  const resetStatusFilter = () => {
+    localStorage.setItem('subscriptions-status-filter', 'all');
+    setStatusFilter('all');
     setActivePage(1);
   };
 
@@ -123,17 +148,35 @@ export const useSubscriptionsData = () => {
     loadPlans();
   }, []);
 
-  const planCount = allPlans.length;
-  const plans = allPlans.slice(
+  const filteredPlans = useMemo(() => {
+    if (statusFilter === 'enabled') {
+      return allPlans.filter((item) => item?.plan?.enabled === true);
+    }
+    if (statusFilter === 'disabled') {
+      return allPlans.filter((item) => item?.plan?.enabled !== true);
+    }
+    return allPlans;
+  }, [allPlans, statusFilter]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredPlans.length / pageSize));
+    setActivePage((page) => Math.min(page || 1, totalPages));
+  }, [filteredPlans.length, pageSize]);
+
+  const planCount = filteredPlans.length;
+  const plans = filteredPlans.slice(
     Math.max(0, (activePage - 1) * pageSize),
     Math.max(0, (activePage - 1) * pageSize) + pageSize,
   );
 
   return {
     // Data state
+    allPlans,
+    filteredPlans,
     plans,
     planCount,
     loading,
+    statusFilter,
 
     // Modal state
     showEdit,
@@ -151,6 +194,8 @@ export const useSubscriptionsData = () => {
     pageSize,
     handlePageChange,
     handlePageSizeChange,
+    handleStatusFilterChange,
+    resetStatusFilter,
 
     // Actions
     loadPlans,

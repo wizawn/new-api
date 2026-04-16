@@ -83,12 +83,24 @@ const UsersPage = () => {
           <UsersDescription
             compactMode={compactMode}
             setCompactMode={setCompactMode}
+            users={usersData.users}
+            userCount={usersData.userCount}
+            statusFilter={usersData.statusFilter}
+            roleFilter={usersData.roleFilter}
+            onStatusFilterChange={usersData.handleStatusFilterChange}
+            onRoleFilterChange={usersData.handleRoleFilterChange}
+            getFormValues={usersData.getFormValues}
+            resetAllFilters={usersData.resetAllFilters}
             t={t}
           />
         }
         actionsArea={
           <div className='flex flex-col md:flex-row justify-between items-center gap-2 w-full'>
-            <UsersActions setShowAddUser={setShowAddUser} t={t} />
+            <UsersActions
+              setShowAddUser={setShowAddUser}
+              refresh={refresh}
+              t={t}
+            />
 
             <UsersFilters
               formInitValues={formInitValues}
@@ -98,6 +110,11 @@ const UsersPage = () => {
               activePage={activePage}
               pageSize={pageSize}
               groupOptions={groupOptions}
+              statusFilter={usersData.statusFilter}
+              onStatusFilterChange={usersData.handleStatusFilterChange}
+              roleFilter={usersData.roleFilter}
+              onRoleFilterChange={usersData.handleRoleFilterChange}
+              resetAllFilters={usersData.resetAllFilters}
               loading={loading}
               searching={searching}
               t={t}

@@ -59,6 +59,10 @@ const PageLayout = () => {
     '/console/task',
     '/console/models',
     '/pricing',
+    '/docs',
+    '/docs/setup',
+    '/login',
+    '/register',
   ];
 
   const shouldHideFooter = cardProPages.includes(location.pathname);
@@ -70,6 +74,10 @@ const PageLayout = () => {
 
   const isConsoleRoute = location.pathname.startsWith('/console');
   const showSider = isConsoleRoute && (!isMobile || drawerOpen);
+  const standalonePublicPages = ['/docs', '/docs/setup'];
+  const isStandalonePublicPage = standalonePublicPages.includes(
+    location.pathname,
+  );
 
   useEffect(() => {
     if (isMobile && drawerOpen && collapsed) {
@@ -149,33 +157,37 @@ const PageLayout = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        overflow: isMobile ? 'visible' : 'hidden',
+        overflow:
+          isStandalonePublicPage || isMobile ? 'visible' : 'hidden',
       }}
     >
-      <Header
-        style={{
-          padding: 0,
-          height: 'auto',
-          lineHeight: 'normal',
-          position: 'fixed',
-          width: '100%',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <HeaderBar
-          onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
-          drawerOpen={drawerOpen}
-        />
-      </Header>
+      {!isStandalonePublicPage && (
+        <Header
+          style={{
+            padding: 0,
+            height: 'auto',
+            lineHeight: 'normal',
+            position: 'fixed',
+            width: '100%',
+            top: 0,
+            zIndex: 100,
+          }}
+        >
+          <HeaderBar
+            onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
+            drawerOpen={drawerOpen}
+          />
+        </Header>
+      )}
       <Layout
         style={{
-          overflow: isMobile ? 'visible' : 'auto',
+          overflow:
+            isStandalonePublicPage || isMobile ? 'visible' : 'auto',
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        {showSider && (
+        {showSider && !isStandalonePublicPage && (
           <Sider
             className='app-sider'
             style={{
@@ -197,11 +209,12 @@ const PageLayout = () => {
         )}
         <Layout
           style={{
-            marginLeft: isMobile
-              ? '0'
-              : showSider
-                ? 'var(--sidebar-current-width)'
-                : '0',
+            marginLeft:
+              isStandalonePublicPage || isMobile
+                ? '0'
+                : showSider
+                  ? 'var(--sidebar-current-width)'
+                  : '0',
             flex: '1 1 auto',
             display: 'flex',
             flexDirection: 'column',
@@ -210,15 +223,23 @@ const PageLayout = () => {
           <Content
             style={{
               flex: '1 0 auto',
-              overflowY: isMobile ? 'visible' : 'hidden',
+              overflowY:
+                isStandalonePublicPage || isMobile ? 'visible' : 'hidden',
               WebkitOverflowScrolling: 'touch',
-              padding: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
+              padding: isStandalonePublicPage
+                ? '0'
+                : shouldInnerPadding
+                  ? isMobile
+                    ? '5px'
+                    : '24px'
+                  : '0',
               position: 'relative',
+              minHeight: isStandalonePublicPage ? '100vh' : 'auto',
             }}
           >
             <App />
           </Content>
-          {!shouldHideFooter && (
+          {!shouldHideFooter && !isStandalonePublicPage && (
             <Layout.Footer
               style={{
                 flex: '0 0 auto',

@@ -78,10 +78,24 @@ func (token *Token) GetIpLimits() []string {
 	return ipLimits
 }
 
-func GetAllUserTokens(userId int, startIdx int, num int) ([]*Token, error) {
+func applyTokenStatusFilter(query *gorm.DB, statusFilter int) *gorm.DB {
+	switch statusFilter {
+	case common.TokenStatusEnabled,
+		common.TokenStatusDisabled,
+		common.TokenStatusExpired,
+		common.TokenStatusExhausted:
+		return query.Where("status = ?", statusFilter)
+	default:
+		return query
+	}
+}
+
+func GetAllUserTokens(userId int, statusFilter int, startIdx int, num int) ([]*Token, error) {
 	var tokens []*Token
 	var err error
-	err = DB.Where("user_id = ?", userId).Order("id desc").Limit(num).Offset(startIdx).Find(&tokens).Error
+	query := DB.Where("user_id = ?", userId)
+	query = applyTokenStatusFilter(query, statusFilter)
+	err = query.Order("id desc").Limit(num).Offset(startIdx).Find(&tokens).Error
 	return tokens, err
 }
 
@@ -124,7 +138,7 @@ func sanitizeLikePattern(input string) (string, error) {
 
 const searchHardLimit = 100
 
-func SearchUserTokens(userId int, keyword string, token string, offset int, limit int) (tokens []*Token, total int64, err error) {
+func SearchUserTokens(userId int, keyword string, token string, statusFilter int, offset int, limit int) (tokens []*Token, total int64, err error) {
 	// model 层强制截断
 	if limit <= 0 || limit > searchHardLimit {
 		limit = searchHardLimit
@@ -152,6 +166,7 @@ func SearchUserTokens(userId int, keyword string, token string, offset int, limi
 	}
 
 	baseQuery := DB.Model(&Token{}).Where("user_id = ?", userId)
+	baseQuery = applyTokenStatusFilter(baseQuery, statusFilter)
 
 	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
 	if keyword != "" {
@@ -443,8 +458,14 @@ func decreaseTokenQuota(id int, quota int) (err error) {
 
 // CountUserTokens returns total number of tokens for the given user, used for pagination
 func CountUserTokens(userId int) (int64, error) {
+	return CountUserTokensByStatus(userId, -1)
+}
+
+func CountUserTokensByStatus(userId int, statusFilter int) (int64, error) {
 	var total int64
-	err := DB.Model(&Token{}).Where("user_id = ?", userId).Count(&total).Error
+	query := DB.Model(&Token{}).Where("user_id = ?", userId)
+	query = applyTokenStatusFilter(query, statusFilter)
+	err := query.Count(&total).Error
 	return total, err
 }
 

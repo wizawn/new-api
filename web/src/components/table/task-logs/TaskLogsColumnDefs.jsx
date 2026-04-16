@@ -136,7 +136,7 @@ const renderType = (type, t) => {
       );
     default:
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );
@@ -163,7 +163,7 @@ const renderPlatform = (platform, t) => {
       );
     default:
       return (
-        <Tag color='white' shape='circle'>
+        <Tag color='grey' shape='circle'>
           {t('未知')}
         </Tag>
       );
@@ -214,7 +214,7 @@ const renderStatus = (type, t) => {
       );
     case 'UNKNOWN':
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );
@@ -226,7 +226,7 @@ const renderStatus = (type, t) => {
       );
     default:
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );

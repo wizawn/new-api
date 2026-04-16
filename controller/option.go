@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -257,6 +258,33 @@ func UpdateOption(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": err.Error(),
+			})
+			return
+		}
+	case "TeamAutomationMode":
+		mode := strings.TrimSpace(strings.ToLower(option.Value.(string)))
+		if mode != "remote_proxy" && mode != "local_playwright" && mode != "disabled" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "TeamAutomationMode 仅支持 remote_proxy、local_playwright 或 disabled",
+			})
+			return
+		}
+	case "AutomationMode":
+		mode := strings.TrimSpace(strings.ToLower(option.Value.(string)))
+		if mode != "local" && mode != "remote" && mode != "disabled" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "AutomationMode 仅支持 local、remote 或 disabled",
+			})
+			return
+		}
+	case "AutomationWorkerTimeoutSeconds":
+		timeoutSeconds, convErr := strconv.Atoi(strings.TrimSpace(option.Value.(string)))
+		if convErr != nil || timeoutSeconds < 5 || timeoutSeconds > 300 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "AutomationWorkerTimeoutSeconds 必须是 5~300 的整数",
 			})
 			return
 		}

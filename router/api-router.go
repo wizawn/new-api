@@ -374,5 +374,53 @@ func SetApiRouter(router *gin.Engine) {
 			deploymentsRoute.POST("/:id/extend", controller.ExtendDeployment)
 			deploymentsRoute.DELETE("/:id", controller.DeleteDeployment)
 		}
+
+		teamAutomationSettingsRoute := apiRouter.Group("/team-automation/settings")
+		teamAutomationSettingsRoute.Use(middleware.RootAuth())
+		{
+			teamAutomationSettingsRoute.GET("", controller.GetTeamAutomationSettings)
+			teamAutomationSettingsRoute.PUT("", controller.SaveTeamAutomationSettings)
+			teamAutomationSettingsRoute.POST("/test-connection", controller.TestTeamAutomationConnection)
+		}
+
+		teamAutomationRoute := apiRouter.Group("/team-automation")
+		teamAutomationRoute.Use(middleware.AdminAuth())
+		{
+			teamAutomationRoute.GET("/meta", controller.GetTeamAutomationMeta)
+			teamAutomationRoute.GET("/modules", controller.GetTeamAutomationModules)
+			teamAutomationRoute.GET("/capabilities", controller.GetTeamAutomationCapabilities)
+			teamAutomationRoute.GET("/health", controller.GetTeamAutomationHealth)
+			teamAutomationRoute.GET("/stats", controller.GetTeamAutomationStats)
+			teamAutomationRoute.GET("/cache/stats", controller.GetTeamAutomationCacheStats)
+			teamAutomationRoute.GET("/accounts", controller.GetTeamAutomationAccounts)
+			teamAutomationRoute.POST("/accounts", controller.CreateTeamAutomationAccount)
+			teamAutomationRoute.POST("/accounts/batch-update", controller.BatchUpdateTeamAutomationAccounts)
+			teamAutomationRoute.POST("/accounts/batch-delete", controller.BatchDeleteTeamAutomationAccounts)
+			teamAutomationRoute.GET("/accounts/stats", controller.GetTeamAutomationAccountStats)
+			teamAutomationRoute.GET("/teams", controller.GetTeamAutomationTeams)
+			teamAutomationRoute.GET("/teams/export/csv", controller.ExportTeamAutomationTeamsCSV)
+			teamAutomationRoute.POST("/teams", controller.CreateTeamAutomationTeam)
+			teamAutomationRoute.POST("/teams/batch-update", controller.BatchUpdateTeamAutomationTeams)
+			teamAutomationRoute.POST("/teams/batch-delete", controller.BatchDeleteTeamAutomationTeams)
+			teamAutomationRoute.GET("/teams/stats", controller.GetTeamAutomationTeamStats)
+			teamAutomationRoute.POST("/teams/import", controller.ImportTeamAutomationTeams)
+			teamAutomationRoute.POST("/teams/auto-select", controller.AutoSelectTeamAutomationTeam)
+			teamAutomationRoute.GET("/teams/:identity", controller.GetTeamAutomationTeam)
+			teamAutomationRoute.PUT("/teams/:identity", controller.UpdateTeamAutomationTeam)
+			teamAutomationRoute.DELETE("/teams/:identity", controller.DeleteTeamAutomationTeam)
+			teamAutomationRoute.GET("/accounts/export/csv", controller.ExportTeamAutomationAccountsCSV)
+			teamAutomationRoute.POST("/accounts/import/csv", controller.ImportTeamAutomationAccountsCSV)
+			teamAutomationRoute.POST("/accounts/import/registered", controller.ImportRegisteredTeamAutomationAccounts)
+			teamAutomationRoute.POST("/accounts/import/redeem-codes", controller.ImportTeamAutomationRedeemCodes)
+			teamAutomationRoute.GET("/accounts/:identity", controller.GetTeamAutomationAccount)
+			teamAutomationRoute.PUT("/accounts/:identity", controller.UpdateTeamAutomationAccount)
+			teamAutomationRoute.DELETE("/accounts/:identity", controller.DeleteTeamAutomationAccount)
+			teamAutomationRoute.POST("/run", controller.StartTeamAutomationRun)
+			teamAutomationRoute.GET("/run/history", controller.GetTeamAutomationRunHistory)
+			teamAutomationRoute.POST("/run/batch-delete", controller.BatchDeleteTeamAutomationRuns)
+			teamAutomationRoute.GET("/run/:id", controller.GetTeamAutomationRun)
+			teamAutomationRoute.GET("/run/:id/logs", controller.GetTeamAutomationRunLogs)
+			teamAutomationRoute.POST("/run/:id/stop", controller.StopTeamAutomationRun)
+		}
 	}
 }

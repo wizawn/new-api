@@ -109,7 +109,7 @@ const PricingCardView = ({
       return (
         <div className={CARD_STYLES.container}>
           <div className={CARD_STYLES.icon}>
-            {getLobeHubIcon(model.icon, 32)}
+            {getLobeHubIcon(model.icon, 32, model.model_name)}
           </div>
         </div>
       );
@@ -119,7 +119,7 @@ const PricingCardView = ({
       return (
         <div className={CARD_STYLES.container}>
           <div className={CARD_STYLES.icon}>
-            {getLobeHubIcon(model.vendor_icon, 32)}
+            {getLobeHubIcon(model.vendor_icon, 32, model.vendor_name)}
           </div>
         </div>
       );
@@ -155,7 +155,7 @@ const PricingCardView = ({
   const renderTags = (record) => {
     // 计费类型标签（左边）
     let billingTag = (
-      <Tag key='billing' shape='circle' color='white' size='small'>
+      <Tag key='billing' shape='circle' color='grey' size='small'>
         -
       </Tag>
     );
@@ -263,7 +263,7 @@ const PricingCardView = ({
                   <div className='flex items-start space-x-3 flex-1 min-w-0'>
                     {getModelIcon(model)}
                     <div className='flex-1 min-w-0'>
-                      <h3 className='text-lg font-bold text-gray-900 truncate'>
+                      <h3 className='text-lg font-bold text-[var(--text-primary)] truncate'>
                         {model.model_name}
                       </h3>
                       <div className='flex flex-col gap-1 text-xs mt-1'>
@@ -317,7 +317,7 @@ const PricingCardView = ({
                   {showRatio && (
                     <div className='pt-3'>
                       <div className='flex items-center space-x-1 mb-2'>
-                        <span className='text-xs font-medium text-gray-700'>
+                        <span className='text-xs font-medium text-[var(--text-primary)]'>
                           {t('倍率信息')}
                         </span>
                         <Tooltip
@@ -334,7 +334,7 @@ const PricingCardView = ({
                           />
                         </Tooltip>
                       </div>
-                      <div className='grid grid-cols-3 gap-2 text-xs text-gray-600'>
+                      <div className='grid grid-cols-3 gap-2 text-xs text-[var(--text-secondary)]'>
                         <div>
                           {t('模型')}:{' '}
                           {model.quota_type === 0 ? model.model_ratio : t('无')}

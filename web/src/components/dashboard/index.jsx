@@ -23,6 +23,7 @@ import { UserContext } from '../../context/User';
 import { StatusContext } from '../../context/Status';
 
 import DashboardHeader from './DashboardHeader';
+import DashboardWorkbench from './DashboardWorkbench';
 import StatsCards from './StatsCards';
 import ChartsPanel from './ChartsPanel';
 import ApiInfoPanel from './ApiInfoPanel';
@@ -159,6 +160,17 @@ const Dashboard = () => {
         dataExportDefaultTime={dashboardData.dataExportDefaultTime}
         timeOptions={dashboardData.timeOptions}
         handleInputChange={dashboardData.handleInputChange}
+        t={dashboardData.t}
+      />
+
+      <DashboardWorkbench
+        userState={userState}
+        statusState={statusState}
+        isAdminUser={dashboardData.isAdminUser}
+        navigate={dashboardData.navigate}
+        CARD_PROPS={CARD_PROPS}
+        FLEX_CENTER_GAP2={FLEX_CENTER_GAP2}
+        dataExportDefaultTime={dashboardData.dataExportDefaultTime}
         t={dashboardData.t}
       />
 

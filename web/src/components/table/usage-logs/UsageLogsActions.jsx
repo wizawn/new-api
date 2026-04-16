@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React from 'react';
-import { Tag, Space, Skeleton } from '@douyinfe/semi-ui';
+import { Button, Tag, Space, Skeleton } from '@douyinfe/semi-ui';
 import { renderQuota } from '../../../helpers';
 import CompactModeToggle from '../../common/ui/CompactModeToggle';
 import { useMinimumLoadingTime } from '../../../hooks/common/useMinimumLoadingTime';
@@ -29,6 +29,7 @@ const LogsActions = ({
   showStat,
   compactMode,
   setCompactMode,
+  handleEyeClick,
   t,
 }) => {
   const showSkeleton = useMinimumLoadingTime(loadingStat);
@@ -45,7 +46,7 @@ const LogsActions = ({
   return (
     <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-2 w-full'>
       <Skeleton loading={needSkeleton} active placeholder={placeholder}>
-        <Space>
+        <Space wrap>
           <Tag
             color='blue'
             style={{
@@ -69,7 +70,7 @@ const LogsActions = ({
             RPM: {stat.rpm}
           </Tag>
           <Tag
-            color='white'
+            color='grey'
             style={{
               border: 'none',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -83,11 +84,21 @@ const LogsActions = ({
         </Space>
       </Skeleton>
 
-      <CompactModeToggle
-        compactMode={compactMode}
-        setCompactMode={setCompactMode}
-        t={t}
-      />
+      <Space wrap>
+        <Button
+          size='small'
+          type='tertiary'
+          loading={loadingStat}
+          onClick={handleEyeClick}
+        >
+          {t('刷新统计')}
+        </Button>
+        <CompactModeToggle
+          compactMode={compactMode}
+          setCompactMode={setCompactMode}
+          t={t}
+        />
+      </Space>
     </div>
   );
 };

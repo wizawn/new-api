@@ -38,6 +38,15 @@ import {
 
 export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
   const { t } = useTranslation();
+  const normalizeStatusFilter = (value) => {
+    const next = String(value || 'all').trim().toLowerCase();
+    if (
+      ['enabled', 'disabled', 'expired', 'exhausted', 'all'].includes(next)
+    ) {
+      return next;
+    }
+    return 'all';
+  };
 
   // Basic state
   const [tokens, setTokens] = useState([]);
@@ -47,6 +56,9 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
   const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE);
   const [searching, setSearching] = useState(false);
   const [searchMode, setSearchMode] = useState(false); // 是否处于搜索结果视图
+  const [statusFilter, setStatusFilter] = useState(
+    normalizeStatusFilter(localStorage.getItem('token-status-filter') || 'all'),
+  );
 
   // Selection state
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -99,11 +111,21 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     setShowKeys({});
   };
 
+  const buildStatusQuery = (status = statusFilter) => {
+    const normalized = normalizeStatusFilter(status);
+    if (normalized === 'all') {
+      return '';
+    }
+    return `&status=${encodeURIComponent(normalized)}`;
+  };
+
   // Load tokens function
-  const loadTokens = async (page = 1, size = pageSize) => {
+  const loadTokens = async (page = 1, size = pageSize, status = statusFilter) => {
     setLoading(true);
     setSearchMode(false);
-    const res = await API.get(`/api/token/?p=${page}&size=${size}`);
+    const res = await API.get(
+      `/api/token/?p=${page}&size=${size}${buildStatusQuery(status)}`,
+    );
     const { success, message, data } = res.data;
     if (success) {
       syncPageData(data);
@@ -115,7 +137,12 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
 
   // Refresh function
   const refresh = async (page = activePage) => {
-    await loadTokens(page);
+    const { searchKeyword, searchToken } = getFormValues();
+    if (searchKeyword || searchToken) {
+      await searchTokens(page, pageSize, statusFilter);
+    } else {
+      await loadTokens(page, pageSize, statusFilter);
+    }
     setSelectedKeys([]);
   };
 
@@ -293,7 +320,7 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
   };
 
   // Search tokens function
-  const searchTokens = async (page = 1, size = pageSize) => {
+  const searchTokens = async (page = 1, size = pageSize, status = statusFilter) => {
     const normalizedPage = Number.isInteger(page) && page > 0 ? page : 1;
     const normalizedSize =
       Number.isInteger(size) && size > 0 ? size : pageSize;
@@ -301,12 +328,12 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     const { searchKeyword, searchToken } = getFormValues();
     if (searchKeyword === '' && searchToken === '') {
       setSearchMode(false);
-      await loadTokens(1);
+      await loadTokens(1, size, status);
       return;
     }
     setSearching(true);
     const res = await API.get(
-      `/api/token/search?keyword=${encodeURIComponent(searchKeyword)}&token=${encodeURIComponent(searchToken)}&p=${normalizedPage}&size=${normalizedSize}`,
+      `/api/token/search?keyword=${encodeURIComponent(searchKeyword)}&token=${encodeURIComponent(searchToken)}&p=${normalizedPage}&size=${normalizedSize}${buildStatusQuery(status)}`,
     );
     const { success, message, data } = res.data;
     if (success) {
@@ -336,18 +363,32 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
   // Page handlers
   const handlePageChange = (page) => {
     if (searchMode) {
-      searchTokens(page, pageSize).then();
+      searchTokens(page, pageSize, statusFilter).then();
     } else {
-      loadTokens(page, pageSize).then();
+      loadTokens(page, pageSize, statusFilter).then();
     }
   };
 
   const handlePageSizeChange = async (size) => {
     setPageSize(size);
     if (searchMode) {
-      await searchTokens(1, size);
+      await searchTokens(1, size, statusFilter);
     } else {
-      await loadTokens(1, size);
+      await loadTokens(1, size, statusFilter);
+    }
+  };
+
+  const handleStatusFilterChange = async (value) => {
+    const normalized = normalizeStatusFilter(value);
+    localStorage.setItem('token-status-filter', normalized);
+    setStatusFilter(normalized);
+    setActivePage(1);
+    setSelectedKeys([]);
+    const { searchKeyword, searchToken } = getFormValues();
+    if (searchKeyword || searchToken || searchMode) {
+      await searchTokens(1, pageSize, normalized);
+    } else {
+      await loadTokens(1, pageSize, normalized);
     }
   };
 
@@ -432,7 +473,7 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
 
   // Initialize data
   useEffect(() => {
-    loadTokens(1)
+    loadTokens(1, pageSize, statusFilter)
       .then()
       .catch((reason) => {
         showError(reason);
@@ -447,6 +488,9 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     tokenCount,
     pageSize,
     searching,
+    searchMode,
+    statusFilter,
+    setStatusFilter,
 
     // Selection state
     selectedKeys,
@@ -484,6 +528,7 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     onOpenLink,
     manageToken,
     searchTokens,
+    handleStatusFilterChange,
     sortToken,
     handlePageChange,
     handlePageSizeChange,

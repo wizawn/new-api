@@ -441,8 +441,11 @@ func validateChannel(channel *model.Channel, isAdd bool) error {
 
 	// 如果是添加操作，检查 channel 和 key 是否为空
 	if isAdd {
-		if channel == nil || channel.Key == "" {
+		if channel == nil {
 			return fmt.Errorf("channel cannot be empty")
+		}
+		if channel.Key == "" && channel.Type != constant.ChannelTypeChatMock {
+			return fmt.Errorf("channel key cannot be empty")
 		}
 
 		// 检查模型名称长度是否超过 255
@@ -581,6 +584,10 @@ func AddChannel(c *gin.Context) {
 	}
 
 	addChannelRequest.Channel.CreatedTime = common.GetTimestamp()
+	if addChannelRequest.Channel.Type == constant.ChannelTypeChatMock &&
+		strings.TrimSpace(addChannelRequest.Channel.Key) == "" {
+		addChannelRequest.Channel.Key = "chatmock_pool"
+	}
 	keys := make([]string, 0)
 	switch addChannelRequest.Mode {
 	case "multi_to_single":

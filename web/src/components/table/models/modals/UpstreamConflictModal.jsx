@@ -221,7 +221,7 @@ const UpstreamConflictModal = ({
                 }
               >
                 <Tag
-                  color='white'
+                  color='grey'
                   size='small'
                   prefixIcon={<MousePointerClick size={14} />}
                 >

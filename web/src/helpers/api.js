@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import {
   getUserIdFromLocalStorage,
+  getUserAccessTokenFromLocalStorage,
   showError,
   formatMessageForAPI,
   isValidMessage,
@@ -26,14 +27,23 @@ import {
 import axios from 'axios';
 import { MESSAGE_ROLES } from '../constants/playground.constants';
 
+function buildApiHeaders() {
+  const headers = {
+    'New-API-User': getUserIdFromLocalStorage(),
+    'Cache-Control': 'no-store',
+  };
+  const accessToken = getUserAccessTokenFromLocalStorage();
+  if (accessToken) {
+    headers.Authorization = accessToken;
+  }
+  return headers;
+}
+
 export let API = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_SERVER_URL
     ? import.meta.env.VITE_REACT_APP_SERVER_URL
     : '',
-  headers: {
-    'New-API-User': getUserIdFromLocalStorage(),
-    'Cache-Control': 'no-store',
-  },
+  headers: buildApiHeaders(),
 });
 
 
@@ -85,10 +95,7 @@ export function updateAPI() {
     baseURL: import.meta.env.VITE_REACT_APP_SERVER_URL
       ? import.meta.env.VITE_REACT_APP_SERVER_URL
       : '',
-    headers: {
-      'New-API-User': getUserIdFromLocalStorage(),
-      'Cache-Control': 'no-store',
-    },
+    headers: buildApiHeaders(),
   });
 
   patchAPIInstance(API);

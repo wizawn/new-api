@@ -45,11 +45,16 @@ function renderTimestamp(timestamp) {
 
 // Render model icon column: prefer model.icon, then fallback to vendor icon
 const renderModelIconCol = (record, vendorMap) => {
-  const iconKey = record?.icon || vendorMap[record?.vendor_id]?.icon;
+  const vendorInfo = vendorMap[record?.vendor_id];
+  const iconKey = record?.icon || vendorInfo?.icon;
   if (!iconKey) return '-';
   return (
     <div className='flex items-center justify-center'>
-      {getLobeHubIcon(iconKey, 20)}
+      {getLobeHubIcon(
+        iconKey,
+        20,
+        record?.model_name || vendorInfo?.name || 'AI',
+      )}
     </div>
   );
 };
@@ -60,9 +65,9 @@ const renderVendorTag = (vendorId, vendorMap, t) => {
   const v = vendorMap[vendorId];
   return (
     <Tag
-      color='white'
+      color='grey'
       shape='circle'
-      prefixIcon={getLobeHubIcon(v.icon || 'Layers', 14)}
+      prefixIcon={getLobeHubIcon(v.icon || 'Layers', 14, v.name)}
     >
       {v.name}
     </Tag>
@@ -118,7 +123,7 @@ const renderEndpoints = (value) => {
       return renderLimitedItems({
         items: parsed,
         renderItem: (ep, idx) => (
-          <Tag key={idx} color='white' size='small' shape='circle'>
+          <Tag key={idx} color='grey' size='small' shape='circle'>
             {ep}
           </Tag>
         ),
@@ -152,7 +157,7 @@ const renderQuotaTypes = (arr, t) => {
         );
       }
       return (
-        <Tag key={`${qt}-${idx}`} color='white' size='small' shape='circle'>
+        <Tag key={`${qt}-${idx}`} color='grey' size='small' shape='circle'>
           {qt}
         </Tag>
       );
@@ -167,7 +172,7 @@ const renderBoundChannels = (channels) => {
   return renderLimitedItems({
     items: channels,
     renderItem: (c, idx) => (
-      <Tag key={idx} color='white' size='small' shape='circle'>
+      <Tag key={idx} color='grey' size='small' shape='circle'>
         {c.name}({c.type})
       </Tag>
     ),

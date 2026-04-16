@@ -308,7 +308,7 @@ const SubscriptionPlansCard = ({
                 <Text strong>{t('我的订阅')}</Text>
                 {hasActiveSubscription ? (
                   <Tag
-                    color='white'
+                    color='grey'
                     size='small'
                     shape='circle'
                     prefixIcon={<Badge dot type='success' />}
@@ -316,12 +316,12 @@ const SubscriptionPlansCard = ({
                     {activeSubscriptions.length} {t('个生效中')}
                   </Tag>
                 ) : (
-                  <Tag color='white' size='small' shape='circle'>
+                  <Tag color='grey' size='small' shape='circle'>
                     {t('无生效')}
                   </Tag>
                 )}
                 {allSubscriptions.length > activeSubscriptions.length && (
-                  <Tag color='white' size='small' shape='circle'>
+                  <Tag color='grey' size='small' shape='circle'>
                     {allSubscriptions.length - activeSubscriptions.length}{' '}
                     {t('个已过期')}
                   </Tag>
@@ -409,7 +409,7 @@ const SubscriptionPlansCard = ({
                             </span>
                             {isActive ? (
                               <Tag
-                                color='white'
+                                color='grey'
                                 size='small'
                                 shape='circle'
                                 prefixIcon={<Badge dot type='success' />}
@@ -417,11 +417,11 @@ const SubscriptionPlansCard = ({
                                 {t('生效')}
                               </Tag>
                             ) : isCancelled ? (
-                              <Tag color='white' size='small' shape='circle'>
+                              <Tag color='grey' size='small' shape='circle'>
                                 {t('已作废')}
                               </Tag>
                             ) : (
-                              <Tag color='white' size='small' shape='circle'>
+                              <Tag color='grey' size='small' shape='circle'>
                                 {t('已过期')}
                               </Tag>
                             )}

@@ -606,7 +606,7 @@ export const getLogsColumns = ({
               )}
             </span>
             {isMultiKey && (
-              <Tag color='white' shape='circle'>
+              <Tag color='grey' shape='circle'>
                 {multiKeyIndex}
               </Tag>
             )}

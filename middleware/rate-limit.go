@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -88,10 +89,51 @@ func rateLimitFactory(maxRequestNum int, duration int64, mark string) func(c *gi
 }
 
 func GlobalWebRateLimit() func(c *gin.Context) {
-	if common.GlobalWebRateLimitEnable {
-		return rateLimitFactory(common.GlobalWebRateLimitNum, common.GlobalWebRateLimitDuration, "GW")
+	if !common.GlobalWebRateLimitEnable {
+		return defNext
 	}
-	return defNext
+	limiter := rateLimitFactory(common.GlobalWebRateLimitNum, common.GlobalWebRateLimitDuration, "GW")
+	return func(c *gin.Context) {
+		if shouldSkipGlobalWebRateLimit(c.Request.URL.Path) {
+			c.Next()
+			return
+		}
+		limiter(c)
+	}
+}
+
+func shouldSkipGlobalWebRateLimit(rawPath string) bool {
+	path := strings.ToLower(strings.TrimSpace(rawPath))
+	if path == "" || path == "/" {
+		return false
+	}
+	prefixes := []string{
+		"/assets/",
+		"/static/",
+		"/public/",
+		"/caowo-mirror/",
+		"/favicon",
+		"/manifest",
+		"/robots.txt",
+		"/sitemap",
+	}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	suffixes := []string{
+		".js", ".mjs", ".css", ".map",
+		".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico", ".bmp",
+		".woff", ".woff2", ".ttf", ".otf", ".eot",
+		".json", ".txt", ".xml",
+	}
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(path, suffix) {
+			return true
+		}
+	}
+	return false
 }
 
 func GlobalAPIRateLimit() func(c *gin.Context) {

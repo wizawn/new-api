@@ -57,8 +57,8 @@ const COMPONENT_STYLES = {
   },
   avatarContainer:
     'w-16 h-16 rounded-2xl bg-white/90 shadow-md backdrop-blur-sm flex items-center justify-center',
-  titleText: { color: 'white' },
-  descriptionText: { color: 'rgba(255,255,255,0.9)' },
+  titleText: { color: 'var(--text-primary)' },
+  descriptionText: { color: 'var(--text-secondary)' },
 };
 
 const CONTENT_TEXTS = {
@@ -104,7 +104,7 @@ const getAvatarText = (vendorName) =>
 
 const createAvatarContent = (vendor, isAllVendors) => {
   if (vendor.icon) {
-    return getLobeHubIcon(vendor.icon, CONFIG.ICON_SIZE);
+    return getLobeHubIcon(vendor.icon, CONFIG.ICON_SIZE, vendor.name);
   }
 
   return (

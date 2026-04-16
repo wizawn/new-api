@@ -14,6 +14,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func parseTokenStatusFilter(statusParam string) int {
+	switch strings.ToLower(strings.TrimSpace(statusParam)) {
+	case "", "all":
+		return -1
+	case "enabled", "1":
+		return common.TokenStatusEnabled
+	case "disabled", "2":
+		return common.TokenStatusDisabled
+	case "expired", "3":
+		return common.TokenStatusExpired
+	case "exhausted", "4":
+		return common.TokenStatusExhausted
+	default:
+		return -1
+	}
+}
+
 func buildMaskedTokenResponse(token *model.Token) *model.Token {
 	if token == nil {
 		return nil
@@ -34,12 +51,13 @@ func buildMaskedTokenResponses(tokens []*model.Token) []*model.Token {
 func GetAllTokens(c *gin.Context) {
 	userId := c.GetInt("id")
 	pageInfo := common.GetPageQuery(c)
-	tokens, err := model.GetAllUserTokens(userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	statusFilter := parseTokenStatusFilter(c.Query("status"))
+	tokens, err := model.GetAllUserTokens(userId, statusFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	total, _ := model.CountUserTokens(userId)
+	total, _ := model.CountUserTokensByStatus(userId, statusFilter)
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(buildMaskedTokenResponses(tokens))
 	common.ApiSuccess(c, pageInfo)
@@ -49,10 +67,11 @@ func SearchTokens(c *gin.Context) {
 	userId := c.GetInt("id")
 	keyword := c.Query("keyword")
 	token := c.Query("token")
+	statusFilter := parseTokenStatusFilter(c.Query("status"))
 
 	pageInfo := common.GetPageQuery(c)
 
-	tokens, total, err := model.SearchUserTokens(userId, keyword, token, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	tokens, total, err := model.SearchUserTokens(userId, keyword, token, statusFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
 		return

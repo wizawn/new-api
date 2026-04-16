@@ -179,6 +179,68 @@ func TestSearchTokensMasksKeyInResponse(t *testing.T) {
 	}
 }
 
+func TestGetAllTokensSupportsStatusFilter(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	enabled := seedToken(t, db, 1, "enabled-token", "abcd1234enabled5678")
+	disabled := seedToken(t, db, 1, "disabled-token", "abcd1234disabled5678")
+	if err := db.Model(disabled).Update("status", common.TokenStatusDisabled).Error; err != nil {
+		t.Fatalf("failed to update token status: %v", err)
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodGet, "/api/token/?p=1&size=10&status=disabled", nil, 1)
+	GetAllTokens(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if !response.Success {
+		t.Fatalf("expected success response, got message: %s", response.Message)
+	}
+
+	var page tokenPageResponse
+	if err := common.Unmarshal(response.Data, &page); err != nil {
+		t.Fatalf("failed to decode token page response: %v", err)
+	}
+	if len(page.Items) != 1 {
+		t.Fatalf("expected exactly one disabled token, got %d", len(page.Items))
+	}
+	if page.Items[0].ID != disabled.Id {
+		t.Fatalf("expected disabled token id %d, got %d", disabled.Id, page.Items[0].ID)
+	}
+	if page.Items[0].ID == enabled.Id {
+		t.Fatalf("unexpected enabled token in disabled filter response")
+	}
+}
+
+func TestSearchTokensSupportsStatusFilter(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	enabled := seedToken(t, db, 1, "shared-name", "ijkl1234enabled5678")
+	expired := seedToken(t, db, 1, "shared-name", "ijkl1234expired5678")
+	if err := db.Model(expired).Update("status", common.TokenStatusExpired).Error; err != nil {
+		t.Fatalf("failed to update token status: %v", err)
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodGet, "/api/token/search?keyword=shared-name&status=expired&p=1&size=10", nil, 1)
+	SearchTokens(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if !response.Success {
+		t.Fatalf("expected success response, got message: %s", response.Message)
+	}
+
+	var page tokenPageResponse
+	if err := common.Unmarshal(response.Data, &page); err != nil {
+		t.Fatalf("failed to decode search response: %v", err)
+	}
+	if len(page.Items) != 1 {
+		t.Fatalf("expected exactly one expired token, got %d", len(page.Items))
+	}
+	if page.Items[0].ID != expired.Id {
+		t.Fatalf("expected expired token id %d, got %d", expired.Id, page.Items[0].ID)
+	}
+	if page.Items[0].ID == enabled.Id {
+		t.Fatalf("unexpected enabled token in expired filter response")
+	}
+}
+
 func TestGetTokenMasksKeyInResponse(t *testing.T) {
 	db := setupTokenControllerTestDB(t)
 	token := seedToken(t, db, 1, "detail-token", "qrst1234uvwx5678")

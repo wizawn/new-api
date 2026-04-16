@@ -186,7 +186,7 @@ function renderType(type, t) {
       );
     default:
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );
@@ -225,7 +225,7 @@ function renderCode(code, t) {
       );
     default:
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );
@@ -280,7 +280,7 @@ function renderStatus(type, t) {
       );
     default:
       return (
-        <Tag color='white' shape='circle' prefixIcon={<HelpCircle size={14} />}>
+        <Tag color='grey' shape='circle' prefixIcon={<HelpCircle size={14} />}>
           {t('未知')}
         </Tag>
       );
