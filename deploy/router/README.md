@@ -8,7 +8,7 @@
 - 独立桥接网络 newapi-out（10.206.60.0/24）和 newapi-db（10.206.61.0/24）。数据库与 Redis 不发布端口。network.py 只维护已有防火墙中的两条自有链，禁止连接其他私网。
 - 外部入口 router.cdkey.si → Cloudflare 代理、Strict TLS、禁用边缘缓存 → 雷池站点 17 / 2053 TLS → 命名空间回环 3000。
 - New API 的 TRUSTED_PROXIES 仅包含回环、10.206.60.1 与 Cloudflare 官方 API 返回的网段；配合雷池现有 X-Forwarded-For 追加机制解析真实客户端地址。
-- 注册关闭，管理员 yanling。初始凭据只保存在服务器 root 可读的 admin.private.json；部署密钥保存在 .env，均不提交 Git。
+- 注册关闭，管理员 yanling。初始凭据保存在操作者 Mac 的受限文件中（目录 0700、文件 0600），服务器不保留该明文密码文件，也不将其加入后续自动备份；运行所需部署密钥保存在 .env，均不提交 Git。
 - new_api_tools 为独立容器，前端沿用 cafb9ee 镜像，后端为 wizawn/new_api_tools 的 feature/optional-background-writes 分支。AUTO_ENSURE_INDEXES=false、ENFORCE_IP_RECORDING=false；数据库角色 newapi_tools 有显式业务读写权限，无 DDL 或表所有权。后台主动开索引、修改用户 IP 记录均关闭，管理页面的显式写操作仍保留。
 
 ## 运维入口
