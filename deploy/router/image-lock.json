@@ -1,0 +1,36 @@
+{
+  "docker.io/calciumion/new-api:v1.0.0-rc.49": {
+    "source": "docker.io/calciumion/new-api@sha256:92dbb9b34b2693bf5d4721ab55f83de78b0724e5b3aa780cd485dcbd7c2818fe",
+    "labels": {
+      "org.opencontainers.image.created": "2026-11-08T05:06:53.075Z",
+      "org.opencontainers.image.description": "Open-source AI gateway. Self-hosted LLM gateway with OpenAI-, Claude- and Gemini-compatible APIs, model routing, access control, usage tracking and cost accounting.",
+      "org.opencontainers.image.licenses": "AGPL-3.0",
+      "org.opencontainers.image.revision": "48a6c87f9e7757fdc58e5be9bcb4f8281ad0dfd0",
+      "org.opencontainers.image.source": "https://github.com/QuantumNous/new-api",
+      "org.opencontainers.image.title": "new-api",
+      "org.opencontainers.image.url": "https://github.com/QuantumNous/new-api",
+      "org.opencontainers.image.version": "v1.0.0-rc.49"
+    }
+  },
+  "docker.io/library/postgres:15-alpine": {
+    "source": "docker.io/library/postgres@sha256:aae6554de426ae1990f1a939ff183a0299146cf7142a6f4c379c3357af9cc2d8",
+    "labels": null
+  },
+  "docker.io/library/redis:7-alpine": {
+    "source": "docker.io/library/redis@sha256:7b1753b4c5ad8458906c272a8132b8c15f5557b000379eb115fb239706a384b7",
+    "labels": null
+  },
+  "ghcr.io/james-6-23/new_api_tools:latest": {
+    "source": "ghcr.io/james-6-23/new_api_tools@sha256:c7473d4e1b6050d8b73f9707f321f272e91f6f677018a640f83ee7f9e72daaca",
+    "labels": {
+      "org.opencontainers.image.created": "2026-08-18T18:11:09.502Z",
+      "org.opencontainers.image.description": "",
+      "org.opencontainers.image.licenses": "",
+      "org.opencontainers.image.revision": "cafb9eead3d2c1cc12ab7490f59a5dda95aea3d9",
+      "org.opencontainers.image.source": "https://github.com/james-6-23/new_api_tools",
+      "org.opencontainers.image.title": "new_api_tools",
+      "org.opencontainers.image.url": "https://github.com/james-6-23/new_api_tools",
+      "org.opencontainers.image.version": "main"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+*.private.json
+tls/
+postgres/
+redis/
+data/
+tools-data/
+tools-server

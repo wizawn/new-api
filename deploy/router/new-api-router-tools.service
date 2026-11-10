@@ -1,0 +1,9 @@
+[Unit]
+Description=Private New API tools proxy
+Requires=new-api-router.service new-api-router-tools.socket
+After=new-api-router.service
+
+[Service]
+NetworkNamespacePath=/run/netns/redeemai-rehearsal
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=10min 127.0.0.1:1145
+NoNewPrivileges=true

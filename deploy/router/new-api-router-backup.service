@@ -1,0 +1,14 @@
+[Unit]
+Description=New API native database backup to existing encrypted off-host repository
+Requires=new-api-router.service
+After=new-api-router.service network-online.target
+
+[Service]
+Type=oneshot
+UMask=0077
+RuntimeDirectory=new-api-router-backup
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/python3 -I -B /opt/new-api-router/backup.py
+TimeoutStartSec=15min
+Nice=15
+IOSchedulingClass=idle

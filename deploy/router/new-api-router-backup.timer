@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily off-host backup for New API router
+
+[Timer]
+OnCalendar=*-*-* 04:47:00 UTC
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

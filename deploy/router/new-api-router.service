@@ -1,0 +1,18 @@
+[Unit]
+Description=Isolated New API router
+Requires=redeemai-rehearsal-docker.service redeemai-production-network.service
+After=redeemai-rehearsal-docker.service redeemai-production-network.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/new-api-router
+ExecStartPre=/usr/bin/python3 -I -B /opt/new-api-router/network.py
+ExecStart=/usr/bin/docker --host unix:///run/redeemai-rehearsal-docker/docker.sock compose --profile tools up -d --wait --wait-timeout 120
+ExecStop=/usr/bin/docker --host unix:///run/redeemai-rehearsal-docker/docker.sock compose --profile tools stop
+TimeoutStartSec=150
+TimeoutStopSec=60
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
