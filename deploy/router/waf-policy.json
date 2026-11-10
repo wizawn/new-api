@@ -1,0 +1,31 @@
+{
+  "name": "router.cdkey.si：仅后台与用户中心保留防护",
+  "action": 0,
+  "level": 0,
+  "is_enabled": true,
+  "log": false,
+  "expire": 0,
+  "insert_position": "last",
+  "pattern": [
+    [
+      {"k": "website", "op": "eq", "v": ["17"], "sub_k": ""},
+      {"k": "host", "op": "eq", "v": ["router.cdkey.si"], "sub_k": ""},
+      {
+        "k": "uri_no_query",
+        "op": "re",
+        "v": ["^/(?!(?:api|console|dashboard|channels|users|models|subscriptions|redemption-codes|task-plugins|system-info|system-settings|keys|usage-logs|profile|security|wallet|playground|chat|chat2link|errors|sign-in|sign-up|forgot-password|otp|oauth|register|reset|user|setup|login)(?:/|$))"],
+        "sub_k": ""
+      }
+    ],
+    [
+      {"k": "website", "op": "eq", "v": ["17"], "sub_k": ""},
+      {"k": "host", "op": "eq", "v": ["router.cdkey.si"], "sub_k": ""},
+      {
+        "k": "uri_no_query",
+        "op": "re",
+        "v": ["^/api/(?:(?:stripe|creem|waffo)/webhook|waffo-pancake/webhook/[^/]+|user/epay/notify|subscription/epay/(?:notify|return))/?$"],
+        "sub_k": ""
+      }
+    ]
+  ]
+}

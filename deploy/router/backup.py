@@ -23,7 +23,7 @@ for name, command in [
 
 # 管理员初始密码仅由操作者本机保管，不列入服务端备份。
 sources = [root / name for name in ('.env', 'compose.yaml', 'image-lock.json',
-    'network.py', 'new-api-router.service', 'tools-server', 'backup.py')]
+    'network.py', 'new-api-router.service', 'tools-server', 'backup.py', 'waf-policy.json')]
 sources.extend(root / name for name in ('new-api-router-backup.service',
     'new-api-router-backup.timer', 'new-api-router-tools.service', 'new-api-router-tools.socket'))
 for folder in ('tls', 'data', 'tools-data'):
